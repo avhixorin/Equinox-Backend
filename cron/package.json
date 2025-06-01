@@ -4,6 +4,7 @@
     "@pinecone-database/pinecone": "^6.0.1",
     "@prisma/client": "^6.8.2",
     "dotenv": "^16.5.0",
+    "node-fetch": "^3.3.2",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {

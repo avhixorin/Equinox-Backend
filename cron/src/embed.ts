@@ -1,7 +1,9 @@
 import { index } from "./createIndex.js";
-import { PrismaClient } from '../generated/prisma/client.js';
-
+import { PrismaClient } from "@prisma/client"
+import fetch from 'node-fetch';
 import dotenv from 'dotenv';
+import { readFile } from 'fs'
+
 dotenv.config({
   path: './.env',
   override: true,
@@ -12,13 +14,15 @@ dotenv.config({
 
 const THRESHOLD_FOR_SIMILARITY = 0.4;
 const DATABASE_URL = process.env.DATABASE_URL;
+const BACKEND_URL = process.env.BACKEND_GRAPHQL_URL
 
-if (!DATABASE_URL) {
-  console.error("Missing required environment variables: REDIS_KEY, DATABASE_URL");
+if (!DATABASE_URL || !BACKEND_URL) {
+  console.error("Missing required environment variables: BACKEND_GRAPHQL_URL, DATABASE_URL");
   process.exit(1);
 }
 
 const prisma = new PrismaClient()
+
 
 interface Article {
   link: string;
@@ -56,6 +60,9 @@ const processArticle = async (article: Article) => {
           category: "dailyNews"
         }
       });
+
+      if (!news) throw new Error("error making parent news")
+
       const miniNews = await prisma.miniNews.create({
         data: {
           title: article.title,
@@ -100,6 +107,8 @@ const processArticle = async (article: Article) => {
           }
         });
 
+        if (!newChildNews) throw new Error("could not create new child news!")
+
         await prisma.news.update({
           where: { id: parentId },
           data: {
@@ -118,11 +127,11 @@ const processArticle = async (article: Article) => {
     console.error(`Failed to process article: ${article.title}`, error);
   }
 };
-import { readFile } from 'fs';
+;
 
 
 export const mainInit = async () => {
-  readFile('./articles.json', 'utf8', (err, data) => {
+  readFile('./articles.json', 'utf8', async (err, data) => {
     if (err) {
       console.error('Error reading articles file:', err);
       return;
@@ -131,21 +140,50 @@ export const mainInit = async () => {
       const articles: Article[] = JSON.parse(data);
       console.log('Articles loaded successfully:', articles.length);
 
-      articles.forEach((article: any) => {
+      const processPromises = articles.map((article) => {
         if (article.link && article.title && article.source) {
-          processArticle(article).catch(error => {
-            console.error(`Failed to process article: ${article.title}`, error);
-          });
+          return processArticle(article);
         } else {
           console.warn(`Skipping invalid article: ${JSON.stringify(article)}`);
+          return Promise.resolve();
         }
       });
+
+      await Promise.all(processPromises);
+
+      await notifyServerOfNewArticles();
+
     } catch (parseError) {
       console.error('Error parsing articles JSON:', parseError);
     }
   });
+};
 
-}
+const notifyServerOfNewArticles = async () => {
+  const graphqlEndpoint = BACKEND_URL;
+
+  const mutation = `
+    mutation {
+      notifyAddedNews
+    }
+  `;
+
+  try {
+    const res = await fetch(graphqlEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: mutation })
+    });
+
+    const result = await res.json();
+    console.log("notifyAddedNews response:", result);
+  } catch (err) {
+    console.error("Failed to notify server:", err);
+  }
+};
+
 
 mainInit();
 

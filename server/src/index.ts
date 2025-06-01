@@ -54,10 +54,10 @@ async function init() {
             context: async ({ req }: { req: any }) => {
                 try {
                     const token = req.headers["authorization"];
-                    if (!token) throw new Error("Invalid token");
+                    if (!token) return { user: null }
                     return { user: UserService.decodeJwtToken(token) };
                 } catch {
-                    throw new Error("Authentication failed");
+                    return { user: null }
                 }
             },
         })

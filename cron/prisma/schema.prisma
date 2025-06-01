@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -15,19 +14,28 @@ datasource db {
 }
 
 model News {
-  id        Int        @id @default(autoincrement())
+  id        String     @id @default(uuid())
   category  String
   childNews MiniNews[]
 }
 
 model MiniNews {
-  id       Int     @id @default(autoincrement())
+  id       String  @id @default(uuid())
   title    String
   link     String
   content  String?
   pubDate  String?
   source   String?
   imageUrl String?
-  newsId   Int
+  newsId   String
   news     News    @relation(fields: [newsId], references: [id])
+}
+
+model User {
+  id            String  @id @default(uuid())
+  name          String?
+  email         String  @unique
+  password      String
+  profileImgUrl String?
+  salt          String
 }

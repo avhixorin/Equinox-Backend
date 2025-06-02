@@ -3,7 +3,9 @@ import { Pinecone } from '@pinecone-database/pinecone';
 
 
 const PINECONE_INDEX_NAME = 'midnews-js'
+const PINECONE_CATEGORY_INDEX = 'categorynews'
 const PINECONE_NAMESPACE = 'news-namespace'
+const PINECONE_CATEGORY_NAMESPACE = 'category-news-namespace'
 
 import dotenv from 'dotenv';
 dotenv.config({
@@ -26,10 +28,11 @@ const pc = new Pinecone({
 });
 
 
+const newsCategory = ["Sports", "Politics", "Business", "Health", "Science", "Technology", "Government", "Startup"]
+
 const indexExists = async (indexName: string) => {
     try {
         const indexes = await pc.listIndexes();
-        console.log('Available indexes:', indexes);
         if (!indexes || !indexes.indexes) return false;
         for (const index of indexes.indexes) {
             if (index.name === indexName) {
@@ -38,21 +41,21 @@ const indexExists = async (indexName: string) => {
         }
         return false;
     } catch (error) {
-        console.error('Error checking index existence:', error);
+        console.error(`Error checking ${indexName} index existence:`, error);
         throw error;
     }
 };
 
 
-const init = async () => {
+const init = async (index_name: string, namespace_name: string) => {
     try {
 
-        const exists = await indexExists(PINECONE_INDEX_NAME);
-        console.log(`Index exists: ${exists}`);
+        const exists = await indexExists(index_name);
+        console.log(`Index ${index_name} exists: ${exists}`);
         if (!exists) {
-            console.log(`Creating index: ${PINECONE_INDEX_NAME}`);
+            console.log(`Creating index: ${index_name}`);
             await pc.createIndexForModel({
-                name: PINECONE_INDEX_NAME,
+                name: index_name,
                 cloud: 'aws',
                 region: 'us-east-1',
                 embed: {
@@ -61,24 +64,40 @@ const init = async () => {
                 },
                 waitUntilReady: true,
             });
-            console.log(`Index ${PINECONE_INDEX_NAME} created successfully`);
+            console.log(`Index ${index_name} created successfully`);
         } else {
-            console.log(`Index ${PINECONE_INDEX_NAME} already exists`);
+            console.log(`Index ${index_name} already exists`);
         }
-        return pc.index(PINECONE_INDEX_NAME).namespace(PINECONE_NAMESPACE);
+
+        const finalIndex = pc.index(index_name).namespace(namespace_name);
+        if (index_name === PINECONE_CATEGORY_INDEX && !exists) {
+
+            for (let i = 0; i < newsCategory.length; i++) {
+                const recordCategory = {
+                    id: `${i + 1}`,
+                    chunk_text: newsCategory[i],
+                };
+
+                await finalIndex.upsertRecords([recordCategory]);
+            }
+            return finalIndex;
+        }
+        else return finalIndex
+
+
     } catch (error) {
-        console.error('Failed to initialize Pinecone index:', error);
+        console.error(`Failed to initialize Pinecone index ${index_name} :`, error);
         throw error;
     }
 };
 
 
-const indexPromise = init();
-
+const indexPromise = init(PINECONE_INDEX_NAME, PINECONE_NAMESPACE);
+const categoryIndexPromise = init(PINECONE_CATEGORY_INDEX, PINECONE_CATEGORY_NAMESPACE)
 
 process.on('SIGINT', () => {
     console.log('Shutting down Pinecone client...');
     process.exit(0);
 });
 
-export { indexPromise as index };
+export { indexPromise as index, categoryIndexPromise as categoryIndex };

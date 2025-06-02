@@ -1,8 +1,9 @@
-import { index } from "./createIndex.js";
+import { categoryIndex, index } from "./createIndex.js";
 import { PrismaClient } from "@prisma/client"
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import { readFile } from 'fs'
+import { resolve } from "path";
 
 dotenv.config({
   path: './.env',
@@ -23,7 +24,6 @@ if (!DATABASE_URL || !BACKEND_URL) {
 
 const prisma = new PrismaClient()
 
-
 interface Article {
   link: string;
   title: string;
@@ -31,17 +31,28 @@ interface Article {
   source?: string;
   pubDate: string,
   imageUrl?: string,
-  newsId: number
 }
 
 const processArticle = async (article: Article) => {
+  console.log(`\n\nprocesing new articles:\n`)
   try {
     const queryText = `${article.title}. ${article.content}`;
 
-    const rerankedResults = await (await index).searchRecords({
-      query: { topK: 10, inputs: { text: queryText } },
-      rerank: { model: 'bge-reranker-v2-m3', topN: 4, rankFields: ['chunk_text'] },
-    });
+    let rerankedResults = null;
+
+    try {
+      rerankedResults = await (await index).searchRecords({
+        query: { topK: 10, inputs: { text: queryText } },
+        rerank: { model: 'bge-reranker-v2-m3', topN: 1, rankFields: ['chunk_text'] },
+      });
+    } catch (error) {
+      rerankedResults = await (await index).searchRecords({
+        query: { topK: 10, inputs: { text: queryText } },
+      });
+      console.log("bg-ranker limit reached")
+    }
+
+    if (!rerankedResults) throw new Error("could not find relevancy search on this article!")
 
     const record = {
       id: article.link,
@@ -53,11 +64,37 @@ const processArticle = async (article: Article) => {
 
     const isNew = rerankedResults.result.hits.length === 0 || rerankedResults.result.hits[0]._score < THRESHOLD_FOR_SIMILARITY;
 
+    let rerankedResultsOfCategory = null;
+    try {
+
+      try {
+        rerankedResultsOfCategory = await (await categoryIndex).searchRecords({
+          query: { topK: 5, inputs: { text: queryText } },
+          rerank: { model: 'bge-reranker-v2-m3', topN: 4, rankFields: ['chunk_text'] },
+        });
+      } catch (error) {
+        rerankedResultsOfCategory = await (await categoryIndex).searchRecords({
+          query: { topK: 5, inputs: { text: queryText } },
+        });
+        console.log("bg-ranker limit reached ")
+      }
+
+      if (!rerankedResultsOfCategory) throw new Error("could not find out its category!")
+
+    } catch (error) {
+      console.error("Error fetching reranked category results:", error);
+    }
+
+    let categoryDerived = (rerankedResultsOfCategory?.result?.hits[0]?.fields as { chunk_text?: string })?.chunk_text
+
+    if (!categoryDerived) categoryDerived = "unknown";
+
     if (isNew) {
-      console.log(`New article: ${article.link}`);
+      console.log("new NEWS")
+
       const news = await prisma.news.create({
         data: {
-          category: "dailyNews"
+          category: categoryDerived
         }
       });
 
@@ -71,7 +108,8 @@ const processArticle = async (article: Article) => {
           source: article.source,
           pubDate: article.pubDate,
           imageUrl: article.imageUrl,
-          newsId: news.id
+          newsId: news.id,
+          category: categoryDerived
         }
       });
 
@@ -93,7 +131,7 @@ const processArticle = async (article: Article) => {
         },
       });
       if (relevantArticle) {
-        console.log(`Continuation of: ${relevantArticle.link}`);
+        console.log(`Relevant news/child news`);
         const parentId = relevantArticle.newsId;
         const newChildNews = await prisma.miniNews.create({
           data: {
@@ -103,7 +141,8 @@ const processArticle = async (article: Article) => {
             source: article.source,
             pubDate: article.pubDate,
             imageUrl: article.imageUrl,
-            newsId: parentId
+            newsId: parentId,
+            category: categoryDerived
           }
         });
 
@@ -127,8 +166,6 @@ const processArticle = async (article: Article) => {
     console.error(`Failed to process article: ${article.title}`, error);
   }
 };
-;
-
 
 export const mainInit = async () => {
   readFile('./articles.json', 'utf8', async (err, data) => {
@@ -140,16 +177,18 @@ export const mainInit = async () => {
       const articles: Article[] = JSON.parse(data);
       console.log('Articles loaded successfully:', articles.length);
 
-      const processPromises = articles.map((article) => {
+      for (let i = 0; i < articles.length; i++) {
+        const article = articles[i];
         if (article.link && article.title && article.source) {
-          return processArticle(article);
+          await processArticle(article);
         } else {
           console.warn(`Skipping invalid article: ${JSON.stringify(article)}`);
-          return Promise.resolve();
         }
-      });
 
-      await Promise.all(processPromises);
+        await new Promise(resolve => setTimeout(() => {
+          resolve("to ensure rate limit not reached by pincone")
+        }, 500))
+      }
 
       await notifyServerOfNewArticles();
 
@@ -183,7 +222,6 @@ const notifyServerOfNewArticles = async () => {
     console.error("Failed to notify server:", err);
   }
 };
-
 
 mainInit();
 

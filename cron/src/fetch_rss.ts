@@ -20,6 +20,8 @@ const rssFeeds = [
     'https://feeds.feedburner.com/ndtvnews-top-stories'
 ];
 
+const HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES = [10, 20, 20, 20]
+
 const isToday = (dateString: any) => {
     const today = new Date();
     const pubDate = new Date(dateString);
@@ -41,9 +43,12 @@ function extractImageUrl(item: any) {
 
 const allArticles = [];
 
-for (const feedUrl of rssFeeds) {
+
+for (let feedNumber = 0; feedNumber < rssFeeds.length; feedNumber++) {
+    const feedUrl = rssFeeds[feedNumber];
     try {
         const feed = await parser.parseURL(feedUrl);
+        let articleTaken = 0;
         for (const item of feed.items) {
             if (item.pubDate && isToday(item.pubDate)) {
                 const article = {
@@ -57,6 +62,8 @@ for (const feedUrl of rssFeeds) {
                 };
                 allArticles.push(article);
                 count++;
+                articleTaken++;
+                if (articleTaken >= HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES[feedNumber]) break;
             }
         }
     } catch (err) {

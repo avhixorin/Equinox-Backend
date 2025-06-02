@@ -15,7 +15,7 @@ datasource db {
 
 model News {
   id        String     @id @default(uuid())
-  category  String
+  category  String?
   childNews MiniNews[]
 }
 
@@ -27,6 +27,7 @@ model MiniNews {
   pubDate  String?
   source   String?
   imageUrl String?
+  category String?
   newsId   String
   news     News    @relation(fields: [newsId], references: [id])
 }

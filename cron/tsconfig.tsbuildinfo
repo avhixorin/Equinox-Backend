@@ -1,1 +1,1 @@
-{"root":["./src/createindex.ts","./src/embed.ts","./src/fetch_rss.ts","./src/notify.ts"],"version":"5.8.3"}
+{"root":["./src/createindex.ts","./src/embed.ts","./src/fetch_rss.ts"],"version":"5.8.3"}

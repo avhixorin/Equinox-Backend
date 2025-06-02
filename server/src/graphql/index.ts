@@ -2,13 +2,16 @@ import { ApolloServer } from "@apollo/server";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { Userinfo as User } from "./user";
 import { newsSubscription } from "./subscriptions";
+import { NewsInfo } from "./news";
 
 const typeDefs = `
     ${User.typeDefs}
     ${newsSubscription.typedefs}
+    ${NewsInfo.typedefs}
 
     type Query {
         ${User.queries}
+        ${NewsInfo.queries}
     }
 
     type Mutation {
@@ -23,13 +26,16 @@ const resolvers = {
         ...newsSubscription.resolvers.Subscription
     },
     Query: {
-        ...User.resolvers.queries
+        ...User.resolvers.queries,
+        ...NewsInfo.resolvers.queries
     },
     Mutation: {
         ...User.resolvers.mutations,
         ...newsSubscription.resolvers.mutation
     }
 };
+
+
 
 export const schema = makeExecutableSchema({
     typeDefs,

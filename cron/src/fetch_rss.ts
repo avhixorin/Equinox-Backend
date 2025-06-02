@@ -20,7 +20,7 @@ const rssFeeds = [
     'https://feeds.feedburner.com/ndtvnews-top-stories'
 ];
 
-const HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES = [10, 20, 20, 20]
+const HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES = [5, 8, 5, 5]
 
 const isToday = (dateString: any) => {
     const today = new Date();

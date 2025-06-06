@@ -3,7 +3,6 @@ import { PrismaClient } from "@prisma/client"
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import { readFile } from 'fs'
-import { resolve } from "path";
 
 dotenv.config({
   path: './.env',
@@ -13,7 +12,7 @@ dotenv.config({
 
 })
 
-const THRESHOLD_FOR_SIMILARITY = 0.4;
+const THRESHOLD_FOR_SIMILARITY = 0.5;
 const DATABASE_URL = process.env.DATABASE_URL;
 const BACKEND_URL = process.env.BACKEND_GRAPHQL_URL
 
@@ -69,7 +68,7 @@ const processArticle = async (article: Article) => {
 
       try {
         rerankedResultsOfCategory = await (await categoryIndex).searchRecords({
-          query: { topK: 5, inputs: { text: queryText } },
+          query: { topK: 10, inputs: { text: queryText } },
           rerank: { model: 'bge-reranker-v2-m3', topN: 4, rankFields: ['chunk_text'] },
         });
       } catch (error) {

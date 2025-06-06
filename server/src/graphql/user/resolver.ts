@@ -6,6 +6,7 @@ const queries = {
         return token;
     },
     getCurrentLoggedInUser: async (_: any, pay: any, context: any) => {
+        console.log(context)
         if (context && context.user) {
             const id = context.user.id;
             const user = await UserService.getUserById(id);
@@ -18,8 +19,9 @@ const queries = {
 
 const mutations = {
     createUser: async (_: any, payload: userInterface) => {
-        const user = await UserService.createUser(payload);
-        return "2";
+        await UserService.createUser(payload);
+        const jwtToken = await UserService.getUserToken(payload);
+        return jwtToken
     }
 }
 

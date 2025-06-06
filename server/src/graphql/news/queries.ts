@@ -1,5 +1,5 @@
 export const queries = `
-    getNews: [MiniNews]!
-    getNewsByCategory(category: String!): [MiniNews]!
-    getNewsOfSameParent(parentNewsId: String!): [MiniNews]!
+    getNews(query: String, lim: Int, offset: Int): [MiniNews]!
+    getNewsByCategory(query:String, category: String!, lim:Int, offset:Int): [MiniNews]!
+    getNewsOfSameParent(query:String, parentNewsId: String!, lim:Int, offset:Int): [MiniNews]!
 `

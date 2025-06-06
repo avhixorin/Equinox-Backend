@@ -1,3 +1,4 @@
+import "dotenv/config"
 import express from "express";
 import http from "http";
 import cors from "cors";
@@ -54,6 +55,7 @@ async function init() {
             context: async ({ req }: { req: any }) => {
                 try {
                     const token = req.headers["authorization"];
+                    console.log("token:", token)
                     if (!token) return { user: null }
                     return { user: UserService.decodeJwtToken(token) };
                 } catch {

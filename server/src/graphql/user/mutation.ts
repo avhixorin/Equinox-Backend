@@ -1,3 +1,3 @@
 export const mutations = `
-    createUser(email: String!, password: String!): String
+    createUser(email: String!, password: String!): String!
 `

@@ -7,7 +7,7 @@ export interface userInterface {
     password: string
 }
 
-const JWT_SECRET = 'k983jld@kjdjf'
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export class UserService {
     private static generateHash(salt: string, password: string) {
@@ -30,6 +30,7 @@ export class UserService {
     }
 
     public static async getUserToken(payload: userInterface) {
+        if (!JWT_SECRET) throw new Error("jwt secret not defined")
         const user = await UserService.getUserByEmail(payload.email);
         if (!user) throw new Error("User does not exist");
 
@@ -42,6 +43,7 @@ export class UserService {
     }
 
     public static decodeJwtToken(token: string) {
+        if (!JWT_SECRET) throw new Error("jwt secret not defined")
         return JWT.verify(token, JWT_SECRET)
     }
 

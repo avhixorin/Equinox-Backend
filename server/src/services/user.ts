@@ -15,6 +15,26 @@ export class UserService {
         return hashedPassword;
     }
 
+    public static async changeUserName(email: string, userId: string, newUserName: string) {
+        const userDetails = await prismaClient.user.findFirst({
+            where: {
+                id: userId
+            }
+        })
+
+        if (!userDetails?.email || userDetails?.email != email)
+            throw new Error("User not Authorised")
+
+        await prismaClient.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                name: newUserName
+            }
+        })
+    }
+
     public static async createUser(payload: userInterface) {
         const { email, password } = payload;
         const salt = randomBytes(32).toString('hex');

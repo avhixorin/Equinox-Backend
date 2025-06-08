@@ -22,6 +22,19 @@ const mutations = {
         await UserService.createUser(payload);
         const jwtToken = await UserService.getUserToken(payload);
         return jwtToken
+    },
+    updateUserName: async (_: any, { newUserName }: { newUserName: string }, context: any) => {
+        console.log(context)
+        if (context && context.user) {
+            const { email, id } = context.user;
+            try {
+                await UserService.changeUserName(email, id, newUserName);
+            } catch (error) {
+                return "invalid request"
+            }
+            return "userName updated successfully"
+        }
+        throw ("not Authorised, Login first")
     }
 }
 

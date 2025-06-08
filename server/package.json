@@ -15,7 +15,7 @@
     "@apollo/server": "^4.12.1",
     "@as-integrations/express5": "^1.0.0",
     "@graphql-tools/schema": "^10.0.23",
-    "@prisma/client": "^6.8.2",
+    "@prisma/client": "^6.9.0",
     "@prisma/extension-accelerate": "^2.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
@@ -24,13 +24,13 @@
     "graphql-subscriptions": "^3.0.0",
     "graphql-ws": "^5.5.5",
     "jsonwebtoken": "^9.0.2",
-    "prisma": "^6.9.0",
     "ws": "^8.18.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.18",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/ws": "^8.18.1",
+    "prisma": "^6.9.0",
     "tsc-watch": "^7.1.1"
   }
 }

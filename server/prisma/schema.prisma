@@ -20,23 +20,34 @@ model News {
 }
 
 model MiniNews {
-  id       String  @id @default(uuid())
+  id       String   @id @default(uuid())
   title    String
   link     String
   content  String?
-  pubDate  String?
+  pubDate  DateTime
   source   String?
   imageUrl String?
   category String?
   newsId   String
-  news     News    @relation(fields: [newsId], references: [id])
+  news     News     @relation(fields: [newsId], references: [id])
+  bookmarkedBy Bookmark[]
 }
 
 model User {
-  id            String  @id @default(uuid())
-  name          String?
-  email         String  @unique
-  password      String
-  profileImgUrl String?
-  salt          String
+  id             String  @id @default(uuid())
+  name           String?
+  email          String  @unique
+  password       String
+  profileImgUrl  String?
+  salt           String
+  bookmarkedNews Bookmark[]
+}
+
+model Bookmark {
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  miniNews   MiniNews @relation(fields: [miniNewsId], references: [id])
+  miniNewsId String
+
+  @@id([userId, miniNewsId])
 }

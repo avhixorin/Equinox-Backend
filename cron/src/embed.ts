@@ -28,7 +28,7 @@ interface Article {
   title: string;
   content?: string;
   source?: string;
-  pubDate: string,
+  pubDate: Date
   imageUrl?: string,
 }
 
@@ -178,6 +178,7 @@ export const mainInit = async () => {
 
       for (let i = 0; i < articles.length; i++) {
         const article = articles[i];
+        article.pubDate = new Date()
         if (article.link && article.title && article.source) {
           await processArticle(article);
         } else {

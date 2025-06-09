@@ -7,6 +7,9 @@ import { useServer } from 'graphql-ws/lib/use/ws';
 import { expressMiddleware } from "@as-integrations/express5";
 import { createApolloGraphqlServer, schema } from "./graphql"; // 
 import { UserService } from "./services/user";
+import { router as userRouter } from "./routes/user.routes"
+import { globalCatch } from "./utils/globalcatch";
+
 
 async function init() {
     const app = express();
@@ -47,10 +50,11 @@ async function init() {
     );
 
     app.get("/", (req, res) => res.send("Server is healthy"));
-
+    app.use("api/v1/user", userRouter)
 
     app.use(
         "/graphql",
+
         expressMiddleware(gqlServer, {
             context: async ({ req }: { req: any }) => {
                 try {
@@ -65,9 +69,12 @@ async function init() {
         })
     );
 
+    app.use(globalCatch)
+
     httpServer.listen(PORT, () => {
         console.log(`Query/Mutation ready at http://localhost:${PORT}/graphql`);
         console.log(`Subscription: ws://localhost:${PORT}/graphql`);
+        console.log(`Rest API ready at: http://localhost:${PORT}/api/v1`);
     });
 }
 

@@ -21,7 +21,8 @@ const router = Router();
 
 router.use(verifyJWT)
 
-router.route("/update-profileImg").put(upload.single("profilepic"), async (req: Request, res: Response) => {
+router.route("/update-profileImg").put(upload.single("profilepic"), 
+async (req: Request, res: Response) => {
     let pfpPath: string | undefined;
     const email = req.user?.email
     if (!email) return res.status(403).json({ message: "Unauthorized access" })

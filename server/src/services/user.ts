@@ -7,6 +7,15 @@ export interface userInterface {
     password: string
 }
 
+export const contextMiddleware = (context: any) => {
+    console.log(context)
+    if (context && context.user) {
+        return context.user
+    }
+    throw ("dont know who you are!")
+}
+
+
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export class UserService {

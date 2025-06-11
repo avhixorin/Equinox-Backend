@@ -112,16 +112,6 @@ const processArticle = async (article: Article) => {
         }
       });
 
-      await prisma.news.update({
-        where: { id: news.id },
-        data: {
-          childNews: {
-            connect: { id: miniNews.id }
-          }
-        }
-      });
-
-
     } else {
       const arLink = rerankedResults.result.hits[0]._id as string;
       const relevantArticle = await prisma.miniNews.findFirst({
@@ -146,15 +136,6 @@ const processArticle = async (article: Article) => {
         });
 
         if (!newChildNews) throw new Error("could not create new child news!")
-
-        await prisma.news.update({
-          where: { id: parentId },
-          data: {
-            childNews: {
-              connect: { id: newChildNews.id }
-            }
-          }
-        });
 
       } else {
         console.warn(`Relevant article not found: ${rerankedResults.result.hits[0]._id}`);

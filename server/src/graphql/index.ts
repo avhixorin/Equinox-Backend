@@ -3,6 +3,7 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import { Userinfo as User } from "./user";
 import { newsSubscription } from "./subscriptions";
 import { NewsInfo } from "./news";
+import { BookmarkInfo } from "./bookmark";
 
 const typeDefs = `
     ${User.typeDefs}
@@ -12,11 +13,13 @@ const typeDefs = `
     type Query {
         ${User.queries}
         ${NewsInfo.queries}
+        ${BookmarkInfo.queries}
     }
 
     type Mutation {
         ${User.mutations}
         ${newsSubscription.mutations}
+        ${BookmarkInfo.mutations}
     }
 
 `;
@@ -27,11 +30,13 @@ const resolvers = {
     },
     Query: {
         ...User.resolvers.queries,
-        ...NewsInfo.resolvers.queries
+        ...NewsInfo.resolvers.queries,
+        ...BookmarkInfo.resolvers.queries
     },
     Mutation: {
         ...User.resolvers.mutations,
-        ...newsSubscription.resolvers.mutation
+        ...newsSubscription.resolvers.mutation,
+        ...BookmarkInfo.resolvers.mutations
     }
 };
 

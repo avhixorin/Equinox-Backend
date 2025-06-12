@@ -39,7 +39,7 @@ router.get("/callback/google", async (req, res) => {
     });
 
 
-    console.log("tokenRes: ", JSON.stringify(tokenRes))
+    console.log("tokenRes: ", tokenRes)
     const { id_token } = tokenRes.data;
 
     const decoded = jwt.decode(id_token);

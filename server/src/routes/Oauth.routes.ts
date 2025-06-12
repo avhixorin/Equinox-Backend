@@ -10,7 +10,7 @@ const YOUR_REDIRECT_URI = process.env.YOUR_REDIRECT_URI;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
 
 
-router.get("/login/google", (req, res) => {
+router.get("/login-register/google", (req, res) => {
     if (!GOOGLE_CLIENT_ID || !YOUR_REDIRECT_URI || !GOOGLE_CLIENT_SECRET)
         return res.status(500).json({ message: "could not load google client id" })
 
@@ -38,8 +38,6 @@ router.get("/callback/google", async (req, res) => {
         grant_type: "authorization_code"
     });
 
-
-    console.log("tokenRes: ", tokenRes)
     const { id_token } = tokenRes.data;
 
     const decoded = jwt.decode(id_token);

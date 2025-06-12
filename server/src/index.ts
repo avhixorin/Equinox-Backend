@@ -50,10 +50,10 @@ async function init() {
         wsServer
     );
 
- 
+
     app.get("/", (req, res) => res.send("Server is healthy"));
     app.use("/api/v1/user", userRouter)
-    app.use("/auth", OauthRouter);
+    app.use("/Oauth", OauthRouter);
 
 
     app.use(

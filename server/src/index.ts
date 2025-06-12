@@ -9,6 +9,7 @@ import { createApolloGraphqlServer, schema } from "./graphql"; //
 import { UserService } from "./services/user";
 import { router as userRouter } from "./routes/user.routes"
 import { globalCatch } from "./utils/globalcatch";
+import { router as OauthRouter } from "./routes/Oauth.routes"
 
 
 async function init() {
@@ -49,8 +50,11 @@ async function init() {
         wsServer
     );
 
+ 
     app.get("/", (req, res) => res.send("Server is healthy"));
-    app.use("api/v1/user", userRouter)
+    app.use("/api/v1/user", userRouter)
+    app.use("/auth", OauthRouter);
+
 
     app.use(
         "/graphql",

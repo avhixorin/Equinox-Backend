@@ -67,8 +67,12 @@ export class UserService {
         const userHashPassword = UserService.generateHash(userSalt, payload.password)
         if (userHashPassword != user.password) throw new Error("wrong password");
 
-        const token = JWT.sign({ id: user.id, email: user.email }, JWT_SECRET)
-        return token;
+        return this.makeToken({ id: user.id, email: user.email })
+    }
+
+    public static makeToken(payload: { id: string, email: string }) {
+        if (!JWT_SECRET) throw new Error("jwt secret not defined")
+        return JWT.sign(payload, JWT_SECRET)
     }
 
     public static decodeJwtToken(token: string) {

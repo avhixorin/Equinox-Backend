@@ -53,7 +53,7 @@ async function init() {
 
     app.get("/", (req, res) => res.send("Server is healthy"));
     app.use("/api/v1/user", userRouter)
-    app.use("/Oauth", OauthRouter);
+    app.use("/api/v1/oauth", OauthRouter);
 
 
     app.use(

@@ -17,7 +17,7 @@ async function init() {
     const PORT = process.env.PORT || 4000;
 
     app.use(cors({
-        origin: [process.env.clientURL || '*'],
+        origin: [process.env.clientURL || "*", process.env.clientURL2 || "*"],
         methods: ['GET', 'POST', 'PUT'],
         credentials: true,
     }));

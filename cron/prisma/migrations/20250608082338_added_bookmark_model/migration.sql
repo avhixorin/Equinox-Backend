@@ -4,11 +4,6 @@
   - You are about to drop the column `search_vector` on the `MiniNews` table. All the data in the column will be lost.
 
 */
--- DropIndex
-DROP INDEX "search_vector_idx";
-
--- AlterTable
-ALTER TABLE "MiniNews" DROP COLUMN "search_vector";
 
 -- CreateTable
 CREATE TABLE "Bookmark" (

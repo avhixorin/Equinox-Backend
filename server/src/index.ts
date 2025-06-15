@@ -63,7 +63,6 @@ async function init() {
             context: async ({ req }: { req: any }) => {
                 try {
                     const token = req.headers["authorization"];
-                    console.log("token:", token)
                     if (!token) return { user: null }
                     return { user: UserService.decodeJwtToken(token) };
                 } catch {

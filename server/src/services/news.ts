@@ -212,13 +212,13 @@ export class NewsService {
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-        SELECT id, title, content, category, "newsId", "pubDate", link, source, "imageUrl"
-        FROM "MiniNews"
-        WHERE "newsId" = $2
-          AND search_vector @@ plainto_tsquery('english', $1)
-        ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
-        LIMIT $3 OFFSET $4;
-        `,
+            SELECT id, title, content, category, "newsId", "pubDate", link, source, "imageUrl"
+            FROM "MiniNews"
+            WHERE "newsId" = $2
+            AND search_vector @@ plainto_tsquery('english', $1)
+            ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
+            LIMIT $3 OFFSET $4;
+            `,
                 query,
                 parentNewsId,
                 limit,

@@ -74,6 +74,48 @@ type Subscription {
 #### `getBookmarks(limit: Int!, offset: Int!): [MiniNews]!`
 - **Purpose:** Fetch user's bookmarked articles.
 
+#### `getTimeLine: JSON!`
+- **Purpose:** Get number of news articles grouped by year.
+- **Example Response:**
+```json ex:
+{
+  "2025": 1002,
+  "2024": 201
+}
+```
+
+#### `getTimeLineOfYear(year: String!): JSON!`
+- **Purpose:** Get number of news articles grouped by months of given year.
+- **Example Response:**
+```json ex:
+{
+  "march": 102,
+  "may": 41
+}
+```
+
+#### `getTimeLineOfMonth(month: String!): JSON!`
+- **Purpose:** Get number of news articles grouped by dates of given month.
+- **Example Response:**
+```json ex:
+{
+  "2": 102,
+  "5": 41,
+  "22": 32
+}
+```
+
+#### `getTimeLineOfDay(date: String!): JSON!`
+- **Purpose:** Get number of news articles grouped by category of given date.
+- **Example Response:**
+```json ex:
+{
+  "Sports": 102,
+  "Politics": 41,
+  "Government": 32
+}
+```
+
 ---
 
 ### ✏️ Mutations

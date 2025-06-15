@@ -12,7 +12,8 @@ dotenv.config({
 
 })
 
-const THRESHOLD_FOR_SIMILARITY = 0.5;
+const THRESHOLD_FOR_SIMILARITY_FOR_CATEGORY = 0.1
+const THRESHOLD_FOR_SIMILARITY = 0.7;
 const DATABASE_URL = process.env.DATABASE_URL;
 const BACKEND_URL = process.env.BACKEND_GRAPHQL_URL
 
@@ -62,14 +63,16 @@ const processArticle = async (article: Article) => {
     await (await index).upsertRecords([record]);
 
     const isNew = rerankedResults.result.hits.length === 0 || rerankedResults.result.hits[0]._score < THRESHOLD_FOR_SIMILARITY;
-
+    
+    const score = rerankedResults.result.hits.length === 0 ? 0 : rerankedResults.result.hits[0]._score;
+    console.log("isNew:", isNew, ", score:", score);
     let rerankedResultsOfCategory = null;
     try {
 
       try {
         rerankedResultsOfCategory = await (await categoryIndex).searchRecords({
           query: { topK: 10, inputs: { text: queryText } },
-          rerank: { model: 'bge-reranker-v2-m3', topN: 4, rankFields: ['chunk_text'] },
+          rerank: { model: 'bge-reranker-v2-m3', topN: 1, rankFields: ['chunk_text'] },
         });
       } catch (error) {
         rerankedResultsOfCategory = await (await categoryIndex).searchRecords({
@@ -85,21 +88,21 @@ const processArticle = async (article: Article) => {
     }
 
     let categoryDerived = (rerankedResultsOfCategory?.result?.hits[0]?.fields as { chunk_text?: string })?.chunk_text
-
-    if (!categoryDerived) categoryDerived = "unknown";
+    const gotCategory =  (rerankedResultsOfCategory?.result?.hits[0]?._score || 0) > THRESHOLD_FOR_SIMILARITY_FOR_CATEGORY;
+    if (!categoryDerived || !gotCategory ) categoryDerived = "Others";
 
     if (isNew) {
       console.log("new NEWS")
 
       const news = await prisma.news.create({
         data: {
-          category: categoryDerived
+          category: categoryDerived 
         }
       });
 
       if (!news) throw new Error("error making parent news")
 
-      const miniNews = await prisma.miniNews.create({
+      await prisma.miniNews.create({
         data: {
           title: article.title,
           content: article.content,
@@ -159,8 +162,9 @@ export const mainInit = async () => {
 
       for (let i = 0; i < articles.length; i++) {
         const article = articles[i];
-        article.pubDate = new Date()
-        if (article.link && article.title && article.source) {
+        const pubDateinDateType = new Date(article.pubDate);
+        article.pubDate = pubDateinDateType;
+        if (article.link && article.title && article.source && article.content && article.imageUrl) {
           await processArticle(article);
         } else {
           console.warn(`Skipping invalid article: ${JSON.stringify(article)}`);

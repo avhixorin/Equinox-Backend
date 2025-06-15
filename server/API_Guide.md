@@ -30,6 +30,7 @@ type MiniNews {
   imageUrl: String
   newsId: String!
   category: String!
+  isBookmarked: String
 }
 ```
 

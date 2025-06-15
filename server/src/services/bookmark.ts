@@ -23,6 +23,17 @@ export class BookmarkService {
     public static async createBookmarks(context: any, miniNewsId: string) {
 
         const { id } = contextMiddleware(context);
+        const alreadyExists = await prismaClient.bookmark.findFirst({
+            where: {
+                userId: id,
+                miniNewsId
+            }
+        });
+
+        if (alreadyExists) {
+            throw new Error("User has already bookmared this news before!");
+        }
+
         const newBookmark = await prismaClient.bookmark.create({
             data: {
                 userId: id,

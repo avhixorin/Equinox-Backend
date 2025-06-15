@@ -8,6 +8,7 @@ export const typedefs = `#news
         imageUrl: String
         newsId: String!
         category: String!
+        isBookmarked: Boolean
     }
 
     type News {

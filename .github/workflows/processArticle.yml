@@ -18,10 +18,11 @@ jobs:
           node-version: "20"
 
       - name: building (installing deps / transpiling)
-        run: npm run prod
+        run: cd ./cron && npm run prod
 
       - name: Run Embed Script
         env:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKEND_GRAPHQL_URL: ${{ secrets.BACKEND_GRAPHQL_URL }}
         run: node cron/dist/embed.js

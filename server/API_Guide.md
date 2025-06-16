@@ -95,13 +95,39 @@ type Subscription {
 ```
 
 #### `getTimeLineOfMonth(month: String!): JSON!`
-- **Purpose:** Get number of news articles grouped by dates of given month.
+- **Purpose:** Get detailed info of articles grouped by dates of given month.
 - **Example Response:**
 ```json ex:
 {
-  "2": 102,
-  "5": 41,
-  "22": 32
+  "data": {
+    "getTimeLineOfMonth": {
+      "14": {
+        "Business": 1,
+        "Government": 1,
+        "Others": 9,
+        "Politics": 3,
+        "Technology": 1
+      },
+      "15": {
+        "Business": 3,
+        "Government": 4,
+        "Others": 9,
+        "Politics": 4
+      },
+      "16": {
+        "Accidents": 4,
+        "Business": 9,
+        "Crime": 1,
+        "Entertainment": 2,
+        "Government": 15,
+        "Health": 2,
+        "Military": 3,
+        "Others": 42,
+        "Politics": 7,
+        "Science": 4
+      }
+    }
+  }
 }
 ```
 

@@ -41,6 +41,21 @@ function extractImageUrl(item: any) {
     return "";
 }
 
+const sourcesArr = ["BBC News", "India Latest News: Top National Headlines Today & Breaking News | The Hindu", "Times of India", "NDTV News Search Records Found 1000"];
+type source = typeof sourcesArr[number];
+const sourceMap : Record<source, string>  = {
+    "BBC News": "BBC",
+    "India Latest News: Top National Headlines Today & Breaking News | The Hindu": "The Hindu",
+    "Times of India": "Times of India",
+    "NDTV News Search Records Found 1000": "NDTV"
+}
+
+function extractTitle(title: source) {
+    return sourceMap[title] || title;  
+}
+    
+// pinecone model - 0.002 me shi bola, 0.1441 me shi bola, 0.0002 shi soch skte he,0.11 she he,
+    
 const allArticles = [];
 
 
@@ -48,6 +63,7 @@ for (let feedNumber = 0; feedNumber < rssFeeds.length; feedNumber++) {
     const feedUrl = rssFeeds[feedNumber];
     try {
         const feed = await parser.parseURL(feedUrl);
+        if(!feed.title) continue;
         let articleTaken = 0;
         for (const item of feed.items) {
             if (item.pubDate && isToday(item.pubDate)) {
@@ -56,7 +72,7 @@ for (let feedNumber = 0; feedNumber < rssFeeds.length; feedNumber++) {
                     link: item.link,
                     pubDate: item.pubDate,
                     content: item.contentSnippet || '',
-                    source: feed.title,
+                    source: extractTitle(feed.title),
                     imageUrl: extractImageUrl(item)
 
                 };

@@ -84,7 +84,7 @@ type Subscription {
 }
 ```
 
-#### `getTimeLineOfYear(year: String!): JSON!`
+#### `getTimeLineOfYear(year: Int!): JSON!`
 - **Purpose:** Get number of news articles grouped by months of given year.
 - **Example Response:**
 ```json ex:

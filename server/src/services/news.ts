@@ -69,15 +69,12 @@ export class NewsService {
         for (const item of initialNews as { newsId: string, pubDate: Date, source: string }[]) {
             const date = new Date(item.pubDate);
             const dateOnly = date.toISOString().split("T")[0];
-            const key = `${item.newsId}-${dateOnly}`;
+            const key = `${item.newsId}`;
             if (!grouped.has(key)) {
                 grouped.set(key, []);
             }
             const group = grouped.get(key);
-            const alreadyExists = group.some((news: { source: string }) => news.source === item.source);
-            if (!alreadyExists) {
-                group.push(item);
-            }
+            group.push(item);
         }
 
         const finalNews = Array.from(grouped.values());
@@ -104,7 +101,9 @@ export class NewsService {
                     pubDate: 'desc',
                 },
                 where: {
-                    category
+                    category :{
+                        has: category
+                    }
                 },
                 skip: offset,
                 take: limit,
@@ -157,15 +156,12 @@ export class NewsService {
         for (const item of initialNews as { newsId: string, pubDate: Date, source: string }[]) {
             const date = new Date(item.pubDate);
             const dateOnly = date.toISOString().split("T")[0];
-            const key = `${item.newsId}-${dateOnly}`;
+            const key = `${item.newsId}`;
             if (!grouped.has(key)) {
                 grouped.set(key, []);
             }
             const group = grouped.get(key);
-            const alreadyExists = group.some((news: { source: string }) => news.source === item.source);
-            if (!alreadyExists) {
-                group.push(item);
-            }
+            group.push(item);
         }
 
         const finalNews = Array.from(grouped.values());
@@ -185,7 +181,7 @@ export class NewsService {
         } catch (error) {
             console.log("fetching news without logging in!")
         }
-        
+
         if (query?.trim() === "") {
             initialNews = await prismaClient.miniNews.findMany({
                 orderBy: {
@@ -245,15 +241,12 @@ export class NewsService {
         for (const item of initialNews as { newsId: string, pubDate: Date, source: string }[]) {
             const date = new Date(item.pubDate);
             const dateOnly = date.toISOString().split("T")[0];
-            const key = `${item.newsId}-${dateOnly}`;
+            const key = `${item.newsId}`;
             if (!grouped.has(key)) {
                 grouped.set(key, []);
             }
             const group = grouped.get(key);
-            const alreadyExists = group.some((news: { source: string }) => news.source === item.source);
-            if (!alreadyExists) {
-                group.push(item);
-            }
+            group.push(item);
         }
 
         const finalNews = Array.from(grouped.values());

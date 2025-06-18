@@ -70,20 +70,23 @@ export class TimeLineService {
 
     }
 
-    public static async getTimeLineOfDay(dateInt: number) {
-        const date = new Date(dateInt);
-        console.log("Getting timeline for date:", dateInt, "as Date:", date);
-        const result = await prismaClient.$queryRaw<{ category: string; count: number }[]>`
+public static async getTimeLineOfDay(dateInt: number) {
+    const date = new Date(dateInt);
+    const dateOnly = new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD
+
+    const result = await prismaClient.$queryRaw<
+        { category: string; count: number }[]
+    >`
         SELECT 
-            "category",
+            unnest("category") AS category,
             COUNT(*)::INT AS count
         FROM "MiniNews"
-        WHERE "pubDate"::DATE = ${new Date(date).toISOString().split('T')[0]}::DATE
-        GROUP BY "category";
-        `;
+        WHERE "pubDate"::DATE = ${dateOnly}::DATE
+        GROUP BY category;
+    `;
 
-        const data = Object.fromEntries(result.map(r => [r.category, r.count]));
-        return data;
+    const data = Object.fromEntries(result.map(r => [r.category, r.count]));
+    return data;
+}
 
-    }
 }

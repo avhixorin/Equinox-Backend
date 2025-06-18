@@ -7,14 +7,14 @@ export const typedefs = `#news
         source: String
         imageUrl: String
         newsId: String!
-        category: String!
+        category: [String!]!
         isBookmarked: Boolean
     }
 
     type News {
         childNews: [MiniNews]!
         id: ID!
-
+        category: [String!]!
     }
 `
 

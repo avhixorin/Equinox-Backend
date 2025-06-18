@@ -10,7 +10,8 @@ dotenv.config();
 const prisma = new PrismaClient();
 
 const COHERE_API_KEY = process.env.COHERE_API_KEY;
-const BACKEND_URL = process.env.BACKEND_GRAPHQL_URL
+const BACKEND_URL = process.env.BACKEND_GRAPHQL_URL;
+const mode = process.env.MODE || "development";
 
 if (!BACKEND_URL) {
   console.error("Missing required environment variables: BACKEND_GRAPHQL_URL");
@@ -22,10 +23,10 @@ if (!COHERE_API_KEY) {
   throw new Error("COHERE_API_KEY is missing from environment variables.");
 }
 const cohere = new CohereClient({
-  token: process.env.COHERE_API_KEY!, // ensure .env has COHERE_API_KEY
+  token: process.env.COHERE_API_KEY!,
 });
 
-const COHERE_DELAY_MS = 1000; // 1 second between requests
+const COHERE_DELAY_MS = 10000; 
 const SIMILARITY_THRESHOLD = 0.7;
 const CATEGORY_THRESHOLD = 0.01;
 
@@ -171,7 +172,6 @@ export const processArticle = async (article: Article) => {
   try {
     const queryText = `${article.title}. ${article.content}`;
 
-    // Step 1: Vector search for top 10 related news
     const topNewsResults = await (await index).searchRecords({
       query: { topK: 10, inputs: { text: queryText } },
     });
@@ -181,7 +181,6 @@ export const processArticle = async (article: Article) => {
     );
     const topNewsLinks = topNewsResults.result.hits.map(hit => hit._id);
 
-    // Step 2: Use Cohere to rerank these top 10 articles
     await sleep(COHERE_DELAY_MS);
     const rerankRelated = await cohere.rerank({
       query: queryText,
@@ -215,14 +214,12 @@ export const processArticle = async (article: Article) => {
 
     console.log(`categoryDerived: ${categoryDerived}, Category: ${finalCategory}, score: ${categoryScore}`);
 
-    // Step 4: Upsert into vector DB
     await (await index).upsertRecords([{
       id: article.link,
       chunk_text: queryText,
       category: article.source || "",
     }]);
 
-    // Step 5: Store in DB
     if (isNew) {
       const news = await prisma.news.create({
         data: { category: finalCategory }
@@ -268,6 +265,7 @@ export const processArticle = async (article: Article) => {
 
 
 export const mainInit = async () => {
+  const articlePath = mode === "development" ? './articles.json' : './cron/articles.json';
   readFile('./articles.json', 'utf8', async (err, data) => {
     if (err) {
       console.error('Error reading articles file:', err);

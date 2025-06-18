@@ -25,4 +25,5 @@ jobs:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BACKEND_GRAPHQL_URL: ${{ secrets.BACKEND_GRAPHQL_URL }}
+          MODE: ${ secrets.MODE }
         run: node cron/dist/embed.js

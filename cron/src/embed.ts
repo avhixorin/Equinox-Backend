@@ -17,6 +17,8 @@ const THRESHOLD_FOR_SIMILARITY = 0.7;
 const DATABASE_URL = process.env.DATABASE_URL;
 const BACKEND_URL = process.env.BACKEND_GRAPHQL_URL
 
+const mode = process.env.MODE || "production";
+
 if (!DATABASE_URL || !BACKEND_URL) {
   console.error("Missing required environment variables: BACKEND_GRAPHQL_URL, DATABASE_URL");
   process.exit(1);
@@ -87,9 +89,11 @@ const processArticle = async (article: Article) => {
       console.error("Error fetching reranked category results:", error);
     }
 
-    let categoryDerived = (rerankedResultsOfCategory?.result?.hits[0]?.fields as { chunk_text?: string })?.chunk_text
+    let categoryDerived = (rerankedResultsOfCategory?.result?.hits[0]?.fields as { category?: string })?.category
     const gotCategory =  (rerankedResultsOfCategory?.result?.hits[0]?._score || 0) > THRESHOLD_FOR_SIMILARITY_FOR_CATEGORY;
     if (!categoryDerived || !gotCategory ) categoryDerived = "Others";
+
+    console.log("categoryDerived:", categoryDerived, "score", rerankedResultsOfCategory?.result?.hits[0]?._score);
 
     if (isNew) {
       console.log("new NEWS")
@@ -151,7 +155,8 @@ const processArticle = async (article: Article) => {
 };
 
 export const mainInit = async () => {
-  readFile('./articles.json', 'utf8', async (err, data) => {
+  const articlesFilePath = mode === 'production'? "./cron/articles.json" : './articles.json';
+  readFile(articlesFilePath, 'utf8', async (err, data) => {
     if (err) {
       console.error('Error reading articles file:', err);
       return;

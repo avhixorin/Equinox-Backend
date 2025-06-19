@@ -27,8 +27,8 @@ const cohere = new CohereClient({
 });
 
 const COHERE_DELAY_MS = 10000;
-const SIMILARITY_THRESHOLD = 0.7;
-const CATEGORY_THRESHOLD = 0.03;
+const SIMILARITY_THRESHOLD = 0.37;
+const CATEGORY_THRESHOLD = 0.021;
 
 const categoryDocs = [
   `Category: Sports
@@ -41,12 +41,13 @@ Examples:
 - FIFA investigates referee conduct after controversial final.`,
 
   `Category: Politics
-Description: Political parties, elections, leaders, legislation, and diplomatic events — excludes general protests unless clearly political.
+Description: Political parties, elections, leaders, legislation, and diplomatic events — excludes general protests unless clearly political.News about governments, elections, leaders, policy decisions, international relations, and diplomatic matters. Includes actions or statements by influential state-affiliated figures.
 Examples:
 - UK Prime Minister meets EU leaders to discuss trade deal.
 - Pro-democracy candidate wins landslide election in Thailand.
 - Parliament passes controversial immigration bill.
 - President vetoes healthcare reform plan.
+- King Charles cancels Middle East visit due to regional conflict concerns
 - Opposition leader arrested ahead of national elections.`,
 
   `Category: Government
@@ -113,13 +114,14 @@ Examples:
 - Woman caught attempting to smuggle gold in shoe soles.`,
 
   `Category: Accidents
-Description: Unintended harmful events like crashes, natural disasters, and technical failures — excludes intentional crimes.
-Examples:
-- Train derails in Odisha, killing 50 passengers.
-- Amusement park ride malfunctions, injures 12.
-- Factory explosion in China causes massive fire.
-- Floods submerge dozens of villages in Assam.
-- Landslide in Himachal traps tourists in remote valley.`,
+  Description: Unintended harmful events like crashes, natural disasters, and technical failures — excludes intentional crimes.
+  Examples:
+  - Train derails in Odisha, killing 50 passengers.
+  - Amusement park ride malfunctions, injures 12.
+  - Factory explosion in China causes massive fire.
+  - Volcano in Indonesia spews ash 11km high, prompting flight alerts.
+  - Floods submerge dozens of villages in Assam.
+  - Landslide in Himachal traps tourists in remote valley.`,
 
   `Category: Entertainment
 Description: Celebrities, film, music, television, arts — includes celebrity gossip, cultural events, and awards.
@@ -304,7 +306,7 @@ export const processArticle = async (article: Article) => {
 
       const oldCategories = relevantArticle?.category || [];
 
-      if (oldCategories[0] !== "Others") {
+      if (oldCategories[0] !== "Others" && categories[0] !== "Others") {
         const newCategories = [...new Set([...oldCategories, ...categories])];
 
         console.log("Updating existing article with new categories:", newCategories);

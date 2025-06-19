@@ -1,11 +1,11 @@
 import { index } from "./createIndex.js";
 import { PrismaClient } from "@prisma/client";
 import { CohereClient } from "cohere-ai";
-import dotenv from 'dotenv';
 import { readFile } from 'fs'
 import fetch from 'node-fetch';
+import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config()
 
 const prisma = new PrismaClient();
 
@@ -197,7 +197,6 @@ const categoryNames = [
   "Startup"
 ];
 
-
 interface Article {
   link: string;
   title: string;
@@ -343,7 +342,6 @@ export const processArticle = async (article: Article) => {
   }
 };
 
-
 export const mainInit = async () => {
   const articlePath = mode === "development" ? './articles.json' : './cron/articles.json';
   readFile(articlePath, 'utf8', async (err, data) => {
@@ -403,5 +401,3 @@ const notifyServerOfNewArticles = async () => {
     console.error("Failed to notify server:", err);
   }
 };
-
-mainInit();

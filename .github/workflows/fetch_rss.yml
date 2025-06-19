@@ -1,6 +1,7 @@
 name: run-fetch-rss
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "40 12 * * *" # 6:10 PM IST
 
@@ -21,4 +22,4 @@ jobs:
         run: cd ./cron && npm run prod
 
       - name: Run Fetch RSS Script
-        run: node cron/dist/fetch_rss.js
+        run: node cron/dist/fetch_rss.js && cd cron && ls

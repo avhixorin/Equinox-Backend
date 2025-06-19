@@ -1,6 +1,7 @@
 name: run-process-article
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "41 12 * * *" # 6:11 PM IST
 
@@ -18,7 +19,7 @@ jobs:
           node-version: "20"
 
       - name: building (installing deps / transpiling)
-        run: cd ./cron && npm run prod
+        run: cd ./cron && ls && npm run prod 
 
       - name: Run Embed Script
         env:
@@ -26,4 +27,5 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BACKEND_GRAPHQL_URL: ${{ secrets.BACKEND_GRAPHQL_URL }}
           MODE: ${ secrets.MODE }
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
         run: node cron/dist/embed.js

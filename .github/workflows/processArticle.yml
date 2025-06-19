@@ -19,7 +19,7 @@ jobs:
           node-version: "20"
 
       - name: building (installing deps / transpiling)
-        run: cd ./cron && ls && npm run prod 
+        run: cd ./cron && npm run prod 
 
       - name: Run Embed Script
         env:

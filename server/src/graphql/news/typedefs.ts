@@ -1,6 +1,7 @@
 export const typedefs = `#news
     type MiniNews {
         id: ID!
+        link: String!
         title: String!
         content: String
         pubDate: String

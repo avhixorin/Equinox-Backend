@@ -36,12 +36,12 @@ export class TimeLineService {
         return data;
     }
 
-    public static async getTimeLineOfMonth(month: string) {
+     public static async getTimeLineOfMonth(month: string) {
         const monthNames = [
             "january", "february", "march", "april",
             "may", "june", "july", "august",
             "september", "october", "november", "december"
-        ]
+        ];
 
         type MonthName = typeof monthNames[number];
 
@@ -55,20 +55,31 @@ export class TimeLineService {
         const monthNum = monthMap[lowerMonth];
         if (!monthNum) throw new Error("Invalid month name, my liege");
 
-        const result = await prismaClient.$queryRaw<{ day: string; count: number }[]>`
+        const result = await prismaClient.$queryRaw<{
+            day: string;
+            category: string;
+            count: number
+        }[]>`
         SELECT 
             EXTRACT(DAY FROM "pubDate")::TEXT AS day,
+            "category",
             COUNT(*)::INT AS count
         FROM "MiniNews"
         WHERE EXTRACT(MONTH FROM "pubDate") = ${monthNum}
-        GROUP BY day
+        GROUP BY day, "category"
         ORDER BY day;
-        `;
+    `;
 
-        const data = Object.fromEntries(result.map(r => [r.day, r.count]));
-        return data;
+        const grouped: Record<string, Record<string, number>> = {};
 
+        for (const { day, category, count } of result) {
+            if (!grouped[day]) grouped[day] = {};
+            grouped[day][category] = count;
+        }
+
+        return grouped;
     }
+
 
 public static async getTimeLineOfDay(dateInt: number) {
     const date = new Date(dateInt);

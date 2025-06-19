@@ -22,4 +22,10 @@ jobs:
         run: cd ./cron && npm run prod
 
       - name: Run Fetch RSS Script
+        env:
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKEND_GRAPHQL_URL: ${{ secrets.BACKEND_GRAPHQL_URL }}
+          MODE: ${{ secrets.MODE }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
         run: node cron/dist/fetch_rss.js && cd cron && ls

@@ -3,6 +3,8 @@ import { writeFile } from 'fs/promises';
 import dotenv from 'dotenv';
 dotenv.config();
 
+const mode = process.env.MODE || "development";
+
 const parser = new Parser({
     customFields: {
         item: [
@@ -53,8 +55,7 @@ const sourceMap : Record<source, string>  = {
 function extractTitle(title: source) {
     return sourceMap[title] || title;  
 }
-    
-// pinecone model - 0.002 me shi bola, 0.1441 me shi bola, 0.0002 shi soch skte he,0.11 she he,
+
     
 const allArticles = [];
 
@@ -88,4 +89,5 @@ for (let feedNumber = 0; feedNumber < rssFeeds.length; feedNumber++) {
 }
 
 console.log(`fetched ${count} articles".`);
-writeFile('articles.json', JSON.stringify(allArticles, null, 2))
+const writePath = mode === "development" ? 'articles.json' : "./cron/articles.json";
+writeFile(writePath, JSON.stringify(allArticles, null, 2))

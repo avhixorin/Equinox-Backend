@@ -15,6 +15,7 @@ export class NewsService {
         let initialNews = null;
         console.log("inside get allnews")
         if (query?.trim() === "") {
+            console.log("offset:",offset, "limit:", limit)
             initialNews = await prismaClient.miniNews.findMany({
                 orderBy: {
                     pubDate: 'desc',
@@ -33,6 +34,8 @@ export class NewsService {
                     imageUrl: true,
                 }
             });
+
+            console.log("initialNews length:", initialNews.length)
 
         }
         else {
@@ -65,22 +68,8 @@ export class NewsService {
 
         }
         const grouped = new Map();
-
-        for (const item of initialNews as { newsId: string, pubDate: Date, source: string }[]) {
-            const date = new Date(item.pubDate);
-            const dateOnly = date.toISOString().split("T")[0];
-            const key = `${item.newsId}`;
-            if (!grouped.has(key)) {
-                grouped.set(key, []);
-            }
-            const group = grouped.get(key);
-            group.push(item);
-        }
-
-        const finalNews = Array.from(grouped.values());
-
-        return finalNews;
-
+        
+        return initialNews
 
     }
 
@@ -138,35 +127,7 @@ export class NewsService {
         }
 
         if (!initialNews) throw new Error("error in fetching news!")
-        if (id) {
-            const userBookmarkedData = await prismaClient.bookmark.findMany({
-                where: { userId: id }
-            })
-            initialNews = (initialNews as { id: string }[]).map((news: { id: string }) => {
-                const isBookmarked = userBookmarkedData.some((bookmark: { miniNewsId: string }) => bookmark.miniNewsId === news.id);
-                return {
-                    ...news,
-                    isBookmarked
-                }
-            })
-
-        }
-        const grouped = new Map();
-
-        for (const item of initialNews as { newsId: string, pubDate: Date, source: string }[]) {
-            const date = new Date(item.pubDate);
-            const dateOnly = date.toISOString().split("T")[0];
-            const key = `${item.newsId}`;
-            if (!grouped.has(key)) {
-                grouped.set(key, []);
-            }
-            const group = grouped.get(key);
-            group.push(item);
-        }
-
-        const finalNews = Array.from(grouped.values());
-
-        return finalNews;
+        return initialNews;
     }
 
 
@@ -223,35 +184,7 @@ export class NewsService {
         }
 
         if (!initialNews) throw new Error("error in fetching news!")
-        if (id) {
-            const userBookmarkedData = await prismaClient.bookmark.findMany({
-                where: { userId: id }
-            })
-            initialNews = (initialNews as { id: string }[]).map((news: { id: string }) => {
-                const isBookmarked = userBookmarkedData.some((bookmark: { miniNewsId: string }) => bookmark.miniNewsId === news.id);
-                return {
-                    ...news,
-                    isBookmarked
-                }
-            })
-
-        }
-        const grouped = new Map();
-
-        for (const item of initialNews as { newsId: string, pubDate: Date, source: string }[]) {
-            const date = new Date(item.pubDate);
-            const dateOnly = date.toISOString().split("T")[0];
-            const key = `${item.newsId}`;
-            if (!grouped.has(key)) {
-                grouped.set(key, []);
-            }
-            const group = grouped.get(key);
-            group.push(item);
-        }
-
-        const finalNews = Array.from(grouped.values());
-
-        return finalNews;
+        return initialNews;
     }
 
 

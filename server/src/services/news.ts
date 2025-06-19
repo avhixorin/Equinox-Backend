@@ -15,7 +15,7 @@ export class NewsService {
         let initialNews = null;
         console.log("inside get allnews")
         if (query?.trim() === "") {
-            console.log("offset:",offset, "limit:", limit)
+            console.log("offset:", offset, "limit:", limit)
             initialNews = await prismaClient.miniNews.findMany({
                 orderBy: {
                     pubDate: 'desc',
@@ -68,11 +68,41 @@ export class NewsService {
 
         }
         const grouped = new Map();
-        
+
         return initialNews
 
     }
 
+    public static async getSpecificNews(context: any, timestampInSeconds: String, category: string) {
+        console.log("timestampInSeconds:", timestampInSeconds, "category:", category);
+        const date = new Date(+timestampInSeconds); 
+
+        // Get start and end of the same day
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const news = await prismaClient.miniNews.findMany({
+            where: {
+                pubDate: {
+                    gte: startOfDay,
+                    lte: endOfDay,
+                },
+                category: {
+                    has: category
+                }
+            },
+            orderBy: {
+                pubDate: 'desc'
+            }
+        });
+
+        console.log("Matching news count:", news.length);
+        return news;
+
+    }
 
     public static async getNewsByCategory(context: any, query: string, category: string, limit: number, offset: number) {
 
@@ -90,7 +120,7 @@ export class NewsService {
                     pubDate: 'desc',
                 },
                 where: {
-                    category :{
+                    category: {
                         has: category
                     }
                 },

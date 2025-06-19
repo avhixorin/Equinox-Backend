@@ -1,6 +1,15 @@
 import { NewsService } from "../../services/news"
 
 const queries = {
+
+    getSpecificNews: async (_: any, { date, category } :
+        {
+            date: string,
+            category: string
+        }, context: any) => {
+        const allNews = await NewsService.getSpecificNews(context, date, category);
+        return allNews;
+    },
     getNews: async (_: any, { query, lim, offset } :
         {
             query: string,

@@ -10,6 +10,15 @@ const queries = {
         const allNews = await NewsService.getSpecificNews(context, date, category);
         return allNews;
     },
+
+    getNewsById: async (_: any, { miniNewsId } :
+        {
+            miniNewsId: string
+        }, context: any) => {
+        const allNews = await NewsService.getNewsById(context, miniNewsId);
+        return allNews;
+    },
+    
     getNews: async (_: any, { query, lim, offset } :
         {
             query: string,

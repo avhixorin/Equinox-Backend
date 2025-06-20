@@ -170,12 +170,13 @@ Examples:
 - Sikh community organizes blood donation drive during Gurpurab.`,
 
   `Category: Startup
-Description: Young businesses, venture capital, product launches, and entrepreneurship.
+Description: Young businesses, venture capital, product launches, and entrepreneurship. Corporate policies, layoffs, internal memos, workplace regulations.
 Examples:
 - AI startup raises $25M for fraud detection software.
 - Healthtech firm builds wearable for diabetes tracking.
 - Agritech startup helps small farmers sell directly.
 - Founders of social app featured in Forbes 30 Under 30.
+- Google lays off 1,000 employees in cost-cutting move
 - Edtech startup offers free upskilling to rural youth.`
 ];
 

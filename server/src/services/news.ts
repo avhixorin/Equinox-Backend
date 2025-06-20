@@ -4,6 +4,7 @@ import { contextMiddleware } from "./user";
 export class NewsService {
 
     public static async getAllNews(context: any, query: string, limit: number, offset: number) {
+
         let id = null;
         try {
             const { id: userid } = contextMiddleware(context);
@@ -67,7 +68,6 @@ export class NewsService {
             })
 
         }
-        const grouped = new Map();
 
         return initialNews
 
@@ -75,7 +75,15 @@ export class NewsService {
 
     public static async getSpecificNews(context: any, timestampInSeconds: String, category: string) {
         console.log("timestampInSeconds:", timestampInSeconds, "category:", category);
-        const date = new Date(+timestampInSeconds); 
+        const date = new Date(+timestampInSeconds);
+
+        let id = null;
+        try {
+            const { id: userid } = contextMiddleware(context);
+            id = userid;
+        } catch (error) {
+            console.log("fetching news without logging in!")
+        }
 
         const startOfDay = new Date(date);
         startOfDay.setHours(0, 0, 0, 0);
@@ -99,7 +107,21 @@ export class NewsService {
         });
 
         console.log("Matching news count:", news.length);
-        return news;
+        if (id) {
+            const userBookmarkedData = await prismaClient.bookmark.findMany({
+                where: { userId: id }
+            })
+            const finalNews = (news as { id: string }[]).map((news: { id: string }) => {
+                const isBookmarked = userBookmarkedData.some((bookmark: { miniNewsId: string }) => bookmark.miniNewsId === news.id);
+                return {
+                    ...news,
+                    isBookmarked
+                }
+            })
+            return finalNews;
+
+        }
+        else return news;
 
     }
 
@@ -156,10 +178,52 @@ export class NewsService {
         }
 
         if (!initialNews) throw new Error("error in fetching news!")
+
+        if (id) {
+            const userBookmarkedData = await prismaClient.bookmark.findMany({
+                where: { userId: id }
+            })
+            initialNews = (initialNews as { id: string }[]).map((news: { id: string }) => {
+                const isBookmarked = userBookmarkedData.some((bookmark: { miniNewsId: string }) => bookmark.miniNewsId === news.id);
+                return {
+                    ...news,
+                    isBookmarked
+                }
+            })
+
+        }
         return initialNews;
     }
 
+    public static async getNewsById(context: any, miniNewsId: string) {
+        let id = null;
+        try {
+            const { id: userid } = contextMiddleware(context);
+            id = userid;
+        } catch (error) {
+            console.log("fetching news without logging in!")
+        }
 
+        const news = await prismaClient.miniNews.findUnique({
+            where: {
+                id: miniNewsId
+            },
+        });
+
+        if (!news) throw new Error("error in fetching news!")
+        if (id) {
+            const userBookmarkedData = await prismaClient.bookmark.findMany({
+                where: { userId: id }
+            });
+            const isBookmarked = userBookmarkedData.some((bookmark: { miniNewsId: string }) => bookmark.miniNewsId === news.id);
+            return {
+                ...news,
+                isBookmarked
+            };
+        }
+        return news;
+
+    }
 
     public static async getNewsOfSameParent(context: any, query: string, parentNewsId: string, limit: number, offset: number) {
 
@@ -213,9 +277,21 @@ export class NewsService {
         }
 
         if (!initialNews) throw new Error("error in fetching news!")
-        return initialNews;
+        if (id) {
+            const userBookmarkedData = await prismaClient.bookmark.findMany({
+                where: { userId: id }
+            })
+            initialNews = (initialNews as { id: string }[]).map((news: { id: string }) => {
+                const isBookmarked = userBookmarkedData.some((bookmark: { miniNewsId: string }) => bookmark.miniNewsId === news.id);
+                return {
+                    ...news,
+                    isBookmarked
+                }
+            })
+
+        }
+
+        return initialNews
     }
-
-
 
 }

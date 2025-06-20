@@ -151,11 +151,12 @@ Examples:
 - High school integrates climate studies into curriculum.`,
 
   `Category: Military
-Description: Armed forces, war, weapons, military alliances, defense operations.
+Description: Armed forces, war, weapons, military alliances, defense operations. 
 Examples:
 - Indian Army conducts operation near LoC.
 - NATO launches joint exercises in the Baltic.
 - Drone strike targets rebel base in Syria.
+- A hospital in the Israeli town of Beersheba was hit as Iran fired a barrage of missiles at the country. focus on missiles attacks
 - Govt signs $8B arms deal with US defense contractor.
 - Military satellite launch enhances surveillance capability.`,
 

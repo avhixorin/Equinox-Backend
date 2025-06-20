@@ -36,7 +36,7 @@ export class TimeLineService {
         return data;
     }
 
-     public static async getTimeLineOfMonth(month: string) {
+    public static async getTimeLineOfMonth(month: string) {
         const monthNames = [
             "january", "february", "march", "april",
             "may", "june", "july", "august",
@@ -58,17 +58,17 @@ export class TimeLineService {
         const result = await prismaClient.$queryRaw<{
             day: string;
             category: string;
-            count: number
+            count: number;
         }[]>`
-        SELECT 
-            EXTRACT(DAY FROM "pubDate")::TEXT AS day,
-            "category",
-            COUNT(*)::INT AS count
-        FROM "MiniNews"
-        WHERE EXTRACT(MONTH FROM "pubDate") = ${monthNum}
-        GROUP BY day, "category"
-        ORDER BY day;
-    `;
+            SELECT 
+                EXTRACT(DAY FROM "pubDate")::TEXT AS day,
+                unnest("category") AS category,
+                COUNT(*)::INT AS count
+            FROM "MiniNews"
+            WHERE EXTRACT(MONTH FROM "pubDate") = ${monthNum}
+            GROUP BY day, category
+            ORDER BY day;
+        `;
 
         const grouped: Record<string, Record<string, number>> = {};
 
@@ -81,13 +81,13 @@ export class TimeLineService {
     }
 
 
-public static async getTimeLineOfDay(dateInt: number) {
-    const date = new Date(dateInt);
-    const dateOnly = new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD
+    public static async getTimeLineOfDay(dateInt: number) {
+        const date = new Date(dateInt);
+        const dateOnly = new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD
 
-    const result = await prismaClient.$queryRaw<
-        { category: string; count: number }[]
-    >`
+        const result = await prismaClient.$queryRaw<
+            { category: string; count: number }[]
+        >`
         SELECT 
             unnest("category") AS category,
             COUNT(*)::INT AS count
@@ -96,8 +96,11 @@ public static async getTimeLineOfDay(dateInt: number) {
         GROUP BY category;
     `;
 
-    const data = Object.fromEntries(result.map(r => [r.category, r.count]));
-    return data;
-}
+        const data = Object.fromEntries(result.map(r => [r.category, r.count]));
+        return data;
+    }
 
 }
+
+
+

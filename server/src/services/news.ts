@@ -77,7 +77,6 @@ export class NewsService {
         console.log("timestampInSeconds:", timestampInSeconds, "category:", category);
         const date = new Date(+timestampInSeconds); 
 
-        // Get start and end of the same day
         const startOfDay = new Date(date);
         startOfDay.setHours(0, 0, 0, 0);
 

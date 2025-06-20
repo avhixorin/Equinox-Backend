@@ -10,6 +10,7 @@ export const typedefs = `#news
         newsId: String!
         category: [String!]!
         isBookmarked: Boolean
+        score: Float
     }
 
     type News {

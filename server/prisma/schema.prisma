@@ -11,24 +11,25 @@ model News {
   id        String     @id @default(uuid())
   category  String[]
   childNews MiniNews[]
-  test Int @default(0) // This is a test field, remove it later
+  test      Int        @default(0) // This is a test field, remove it later
 }
 
 model MiniNews {
-  id            String                   @id @default(uuid())
-  title         String
-  link          String
-  content       String?
-  pubDate       DateTime
-  source        String?
-  imageUrl      String?
-  newsId        String
-  category      String[]
+  id           String     @id @default(uuid())
+  title        String
+  link         String
+  content      String?
+  pubDate      DateTime
+  source       String?
+  imageUrl     String?
+  newsId       String
+  category     String[]
   // search_vector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, ((COALESCE(title, ''::text) || ' '::text) || COALESCE(content, ''::text)))"))
-  bookmarkedBy  Bookmark[]
-  news          News                     @relation(fields: [newsId], references: [id])
+  bookmarkedBy Bookmark[]
+  timelinedBy  Timeline[]
+  news         News       @relation(fields: [newsId], references: [id])
 
-  score         Decimal                  @default(0.37)
+  score Decimal @default(0.37)
 
   // @@index([search_vector], map: "search_vector_idx", type: Gin)
 }
@@ -42,9 +43,19 @@ model User {
   salt           String
   Oauth          Boolean    @default(false)
   bookmarkedNews Bookmark[]
+  TimelineNews   Timeline[]
 }
 
 model Bookmark {
+  userId     String
+  miniNewsId String
+  miniNews   MiniNews @relation(fields: [miniNewsId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@id([userId, miniNewsId])
+}
+
+model Timeline {
   userId     String
   miniNewsId String
   miniNews   MiniNews @relation(fields: [miniNewsId], references: [id])

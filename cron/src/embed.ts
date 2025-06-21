@@ -330,7 +330,8 @@ export const processArticle = async (article: Article) => {
             pubDate: article.pubDate,
             imageUrl: article.imageUrl,
             newsId: relevantArticle.newsId,
-            category: categories
+            category: categories,
+            score: relatedScore.toFixed(2) ,
           }
         });
       } else {

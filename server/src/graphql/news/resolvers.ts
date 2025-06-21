@@ -2,24 +2,26 @@ import { NewsService } from "../../services/news"
 
 const queries = {
 
-    getSpecificNews: async (_: any, { date, category } :
+    getSpecificNews: async (_: any, { date, category, lim, offset }:
         {
             date: string,
-            category: string
+            category: string,
+            lim: number,
+            offset: number
         }, context: any) => {
-        const allNews = await NewsService.getSpecificNews(context, date, category);
+        const allNews = await NewsService.getSpecificNews(context, date, category, lim, offset);
         return allNews;
     },
 
-    getNewsById: async (_: any, { miniNewsId } :
+    getNewsById: async (_: any, { miniNewsId }:
         {
             miniNewsId: string
         }, context: any) => {
         const allNews = await NewsService.getNewsById(context, miniNewsId);
         return allNews;
     },
-    
-    getNews: async (_: any, { query, lim, offset } :
+
+    getNews: async (_: any, { query, lim, offset }:
         {
             query: string,
             lim: number,

@@ -73,7 +73,7 @@ export class NewsService {
 
     }
 
-    public static async getSpecificNews(context: any, timestampInSeconds: String, category: string) {
+    public static async getSpecificNews(context: any, timestampInSeconds: String, category: string, limit:number, offset:number) {
         console.log("timestampInSeconds:", timestampInSeconds, "category:", category);
         const date = new Date(+timestampInSeconds);
 
@@ -95,7 +95,7 @@ export class NewsService {
             where: {
                 pubDate: {
                     gte: startOfDay,
-                    lte: endOfDay,
+                    lte: endOfDay,  
                 },
                 category: {
                     has: category
@@ -103,7 +103,9 @@ export class NewsService {
             },
             orderBy: {
                 pubDate: 'desc'
-            }
+            },
+            skip: offset,
+            take: limit,
         });
 
         console.log("Matching news count:", news.length);

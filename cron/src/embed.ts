@@ -279,11 +279,6 @@ export const processArticle = async (article: Article) => {
       console.log(`Category: ${category}`);
     }
 
-    await (await index).upsertRecords([{
-      id: article.link,
-      chunk_text: queryText,
-      category: article.source || "",
-    }]);
 
     if (isNew) {
       const news = await prisma.news.create({
@@ -302,7 +297,8 @@ export const processArticle = async (article: Article) => {
           category: categories
         }
       });
-    } else {
+    }
+    else {
       const relevantArticle = await prisma.miniNews.findFirst({ where: { link: relatedLink } });
 
       const oldCategories = relevantArticle?.category || [];
@@ -331,13 +327,20 @@ export const processArticle = async (article: Article) => {
             imageUrl: article.imageUrl,
             newsId: relevantArticle.newsId,
             category: categories,
-            score: relatedScore.toFixed(2) ,
+            score: relatedScore.toFixed(2),
           }
         });
       } else {
         console.warn("Related article not found in DB, skipping child creation.");
       }
     }
+
+    await (await index).upsertRecords([{
+      id: article.link,
+      chunk_text: queryText,
+      category: article.source || "",
+    }]);
+
 
     console.log(`✅ Processed: ${article.title}`);
   } catch (err) {

@@ -16,7 +16,7 @@ model News {
 model MiniNews {
   id           String     @id @default(uuid())
   title        String
-  link         String
+  link         String     @unique
   content      String?
   pubDate      DateTime
   source       String?

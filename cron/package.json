@@ -17,6 +17,6 @@
   "scripts": {
     "build": "tsc -b",
     "start": "tsc -b && node dist/embed.js",
-    "prod": "npm install && tsc -b"
+    "prod": "npm install && npx prisma generate && tsc -b"
   }
 }

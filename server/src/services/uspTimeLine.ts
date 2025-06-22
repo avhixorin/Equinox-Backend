@@ -23,12 +23,14 @@ export class USPTimelineService {
     public static async createTimeline(context: any, miniNewsId: string) {
 
         const { id } = contextMiddleware(context);
+
         const alreadyExists = await prismaClient.timeline.findFirst({
             where: {
                 userId: id,
                 miniNewsId
             }
         });
+        console.log("timeline already exists: ", alreadyExists);
 
         if (alreadyExists) {
             throw new Error("User has already TimeLined this news before!");

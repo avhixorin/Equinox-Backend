@@ -35,14 +35,17 @@ const rssFeeds = [
     "https://www.opindia.com/feed/",
     "https://www.orissapost.com/feed/",
     "https://vindhyafirst.com/feed/",
-    "https://techgenyz.com/feed/"
+    "https://techgenyz.com/feed/",
+    "https://www.indiatvnews.com/rssnews/topstory.xml",
+    "https://www.news18.com/commonfeeds/v1/eng/rss/india.xml"
 ];
 
 console.log("total news sources: ", rssFeeds.length);
 
 const HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES = [
     40, 20, 20, 20, 20, 20, 20, 20, 20, 20,
-    20, 20, 20, 20, 20, 20, 20, 20, 20, 20
+    20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
+    20, 20
 ];
 
 
@@ -89,7 +92,9 @@ export const fetchFnc = async () => {
         "OpIndia",
         "Odisha News, Odisha Latest news, Odisha Daily – OrissaPOST",
         "Vindhya First",
-        "Techgenyz"
+        "Techgenyz",
+        "IndiaTV: Google News Feed",
+        "India News in news18.com, India Latest News, India News"
     ];
     console.log("sourcesArr length: ", sourcesArr.length);
 
@@ -115,7 +120,9 @@ export const fetchFnc = async () => {
         "Digpu News": "Digpu News",
         "Odisha News, Odisha Latest news, Odisha Daily – OrissaPOST": "OrissaPOST",
         "Vindhya First": "Vindhya First",
-        "Techgenyz": "Techgenyz"
+        "Techgenyz": "Techgenyz",
+        "IndiaTV: Google News Feed": "IndiaTV",
+        "India News in news18.com, India Latest News, India News": "News18"
     };
     console.log("sourceMap length: ", Object.keys(sourceMap).length);
 
@@ -165,4 +172,5 @@ export const fetchFnc = async () => {
     await writeFile(writePath, JSON.stringify(allArticles, null, 2))
     console.log("✅ Successfully wrote articles.json");
 }
+
 

@@ -294,7 +294,8 @@ export const processArticle = async (article: Article) => {
           pubDate: article.pubDate,
           imageUrl: article.imageUrl,
           newsId: news.id,
-          category: categories
+          category: categories,
+          score: 1.2
         }
       });
     }

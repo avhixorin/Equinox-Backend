@@ -16,14 +16,37 @@ const parser = new Parser({
 });
 
 const rssFeeds = [
-    'https://feeds.bbci.co.uk/news/rss.xml',
-    'https://www.thehindu.com/news/national/feeder/default.rss',
-    'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
-    'https://feeds.feedburner.com/ndtvnews-top-stories'
+    'https://feeds.feedburner.com/ndtvnews-top-stories',
+    "https://www.firstpost.com/commonfeeds/v1/mfp/rss/india.xml",
+    "https://www.dnaindia.com/feeds/india.xml",
+    "https://prod-qt-images.s3.amazonaws.com/production/thequint/feed.xml",
+    "https://feeds.feedburner.com/ScrollinArticles.rss",
+    "https://www.storifynews.com/feed/",
+    "https://www.amarujala.com/rss/breaking-news.xml",
+    "https://www.abcrnews.com/feed/",
+    "https://thetimesofbengal.com/feed/",
+    "https://digpu.com/feed",
+    "https://www.agranews.com/feed/",
+    "https://thenorthlines.com/feed/",
+    "https://chandigarhmetro.com/feed/",
+    "https://telanganatoday.com/feed",
+    "https://www.dailyexcelsior.com/feed/",
+    "https://www.indiavision.com/feed/",
+    "https://www.opindia.com/feed/",
+    "https://www.orissapost.com/feed/",
+    "https://vindhyafirst.com/feed/",
+    "https://techgenyz.com/feed/"
 ];
 
-const HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES = [20, 20, 20, 20]
+console.log("total news sources: ", rssFeeds.length);
 
+const HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES = [
+    40, 20, 20, 20, 20, 20, 20, 20, 20, 20,
+    20, 20, 20, 20, 20, 20, 20, 20, 20, 20
+];
+
+
+console.log("How much articles to take from each source: ", HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES.length);
 const isToday = (dateString: any) => {
     const today = new Date();
     const pubDate = new Date(dateString);
@@ -46,14 +69,56 @@ export const fetchFnc = async () => {
         return "";
     }
 
-    const sourcesArr = ["BBC News", "India Latest News: Top National Headlines Today & Breaking News | The Hindu", "Times of India", "NDTV News Search Records Found 1000"];
+    const sourcesArr = [
+        "NDTV News Search Records Found 1000",
+        "Firstpost Latest News",
+        "The Quint",
+        "India News",
+        "Scroll.in",
+        "Storify News",
+        "Digpu News",
+        "Latest And Breaking Hindi News Headlines, News In Hindi | अमर उजाला हिंदी न्यूज़ | - Amar Ujala",
+        "AbcrNews",
+        "The Times of Bengal",
+        "Agra News, India News",
+        "Northlines",
+        "Chandigarh Metro",
+        "Telangana Today",
+        "Daily Excelsior",
+        "IndiaVision India News & Information",
+        "OpIndia",
+        "Odisha News, Odisha Latest news, Odisha Daily – OrissaPOST",
+        "Vindhya First",
+        "Techgenyz"
+    ];
+    console.log("sourcesArr length: ", sourcesArr.length);
+
     type source = typeof sourcesArr[number];
+
     const sourceMap: Record<source, string> = {
-        "BBC News": "BBC",
-        "India Latest News: Top National Headlines Today & Breaking News | The Hindu": "The Hindu",
-        "Times of India": "Times of India",
-        "NDTV News Search Records Found 1000": "NDTV"
-    }
+        "NDTV News Search Records Found 1000": "NDTV",
+        "Firstpost Latest News": "Firstpost",
+        "The Quint": "The Quint",
+        "India News": "DNA",
+        "Scroll.in": "Scroll",
+        "Storify News": "Storify",
+        "Latest And Breaking Hindi News Headlines, News In Hindi | अमर उजाला हिंदी न्यूज़ | - Amar Ujala": "Amar Ujala",
+        "AbcrNews": "AbcrNews",
+        "The Times of Bengal": "The Times of Bengal",
+        "Agra News, India News": "Agra News",
+        "Northlines": "Northlines",
+        "Chandigarh Metro": "Chandigarh Metro",
+        "Telangana Today": "Telangana Today",
+        "Daily Excelsior": "Daily Excelsior",
+        "IndiaVision India News & Information": "IndiaVision",
+        "OpIndia": "OpIndia",
+        "Digpu News": "Digpu News",
+        "Odisha News, Odisha Latest news, Odisha Daily – OrissaPOST": "OrissaPOST",
+        "Vindhya First": "Vindhya First",
+        "Techgenyz": "Techgenyz"
+    };
+    console.log("sourceMap length: ", Object.keys(sourceMap).length);
+
 
     function extractTitle(title: source) {
         return sourceMap[title] || title;
@@ -67,6 +132,7 @@ export const fetchFnc = async () => {
         const feedUrl = rssFeeds[feedNumber];
         try {
             const feed = await parser.parseURL(feedUrl);
+
             if (!feed.title) continue;
             let articleTaken = 0;
             for (const item of feed.items) {
@@ -85,7 +151,10 @@ export const fetchFnc = async () => {
                     articleTaken++;
                     if (articleTaken >= HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES[feedNumber]) break;
                 }
+
+
             }
+            if (articleTaken > 0) console.log(`fetched ${articleTaken} articles from ${extractTitle(feed.title)}".`);
         } catch (err) {
             console.error(`Failed to fetch ${feedUrl}:`, err);
         }

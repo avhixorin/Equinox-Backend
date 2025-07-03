@@ -6,6 +6,7 @@ export class YoutubeService {
     public static async getYtOfSameParent(context: any, query: string, parentNewsId: string, limit: number, offset: number) {
 
         let initialNews = null;
+        console.log("fetching youtube content with query:", query, "parentNewsId:", parentNewsId, "limit:", limit, "offset:", offset);
         let id = null;
         try {
             const { id: userid } = contextMiddleware(context);

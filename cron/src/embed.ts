@@ -248,6 +248,11 @@ export const processArticle = async (article: Article) => {
       relatedLink = topNewsLinks[relatedIndex];
     }
 
+    if(isNew && article.youtube) {
+      console.log("skipping this youtube videos since it is not related to any website news feeds!")
+      return;
+    }
+
     console.log(`isNew: ${isNew}, score: ${relatedScore}, link: ${relatedLink}`);
 
     await sleep(COHERE_DELAY_MS);

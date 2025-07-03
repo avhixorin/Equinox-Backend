@@ -11,7 +11,6 @@ export async function extract(news: { id: string, link: string }) {
     const dom = new JSDOM(html, { url: news.link });
     const reader = new Readability(dom.window.document);
     const article = reader.parse();
-    console.log(`article title: ${article?.title?.trim()}\n\narticle content: ${article?.textContent?.trim()}`);
     if (article?.textContent) {
         console.log("\nupdating in db!")
         await client.miniNews.update({

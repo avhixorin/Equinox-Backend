@@ -13,7 +13,7 @@ export const typedefs = `#news
         score: Float!
         youtube: Boolean
         longDescription: String
-        views: Int
+        ytViews: Int
     }
 
     type News {

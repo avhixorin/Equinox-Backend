@@ -21,19 +21,11 @@ export class NewsService {
                 orderBy: {
                     pubDate: 'desc',
                 },
+                where: {
+                    youtube: false
+                },
                 skip: offset,
                 take: limit,
-                select: {
-                    id: true,
-                    title: true,
-                    content: true,
-                    category: true,
-                    newsId: true,
-                    pubDate: true,
-                    link: true,
-                    source: true,
-                    imageUrl: true,
-                }
             });
 
             console.log("initialNews length:", initialNews.length)
@@ -42,9 +34,10 @@ export class NewsService {
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-        SELECT id, title, content, category, "newsId", "pubDate", link, source, "imageUrl"
+        SELECT id, title, content, score, category, "newsId", "pubDate", link, source, "imageUrl"
         FROM "MiniNews"
         WHERE search_vector @@ plainto_tsquery('english', $1)
+        AND youtube = false
         ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
         LIMIT $2 OFFSET $3;
         `,
@@ -73,7 +66,7 @@ export class NewsService {
 
     }
 
-    public static async getSpecificNews(context: any, timestampInSeconds: String, category: string, limit:number, offset:number) {
+    public static async getSpecificNews(context: any, timestampInSeconds: String, category: string, limit: number, offset: number) {
         console.log("timestampInSeconds:", timestampInSeconds, "category:", category);
         const date = new Date(+timestampInSeconds);
 
@@ -93,9 +86,10 @@ export class NewsService {
 
         const news = await prismaClient.miniNews.findMany({
             where: {
+                youtube: false,
                 pubDate: {
                     gte: startOfDay,
-                    lte: endOfDay,  
+                    lte: endOfDay,
                 },
                 category: {
                     has: category
@@ -143,31 +137,22 @@ export class NewsService {
                     pubDate: 'desc',
                 },
                 where: {
+                    youtube: false,
                     category: {
                         has: category
                     }
                 },
                 skip: offset,
                 take: limit,
-                select: {
-                    id: true,
-                    title: true,
-                    content: true,
-                    category: true,
-                    newsId: true,
-                    pubDate: true,
-                    link: true,
-                    source: true,
-                    imageUrl: true,
-                }
             });
         }
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-        SELECT id, title, content, category, "newsId", "pubDate", link, source, "imageUrl"
+        SELECT id, title, content, score, youtube, category, "newsId", "pubDate", link, source, "imageUrl"
         FROM "MiniNews"
         WHERE category = $2
+          AND youtube = false
           AND search_vector @@ plainto_tsquery('english', $1)
         ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
         LIMIT $3 OFFSET $4;
@@ -208,7 +193,8 @@ export class NewsService {
 
         const news = await prismaClient.miniNews.findUnique({
             where: {
-                id: miniNewsId
+                id: miniNewsId,
+                youtube: false
             },
         });
 
@@ -244,29 +230,20 @@ export class NewsService {
                     pubDate: 'desc',
                 },
                 where: {
+                    youtube: false,
                     newsId: parentNewsId
                 },
                 skip: offset,
                 take: limit,
-                select: {
-                    id: true,
-                    title: true,
-                    content: true,
-                    category: true,
-                    newsId: true,
-                    pubDate: true,
-                    link: true,
-                    source: true,
-                    imageUrl: true,
-                }
             });
         }
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-            SELECT id, title, content, category, "newsId", "pubDate", link, source, "imageUrl"
+            SELECT id, title, content, score, youtube, category, "newsId", "pubDate", link, source, "imageUrl"
             FROM "MiniNews"
             WHERE "newsId" = $2
+            AND youtube = false
             AND search_vector @@ plainto_tsquery('english', $1)
             ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
             LIMIT $3 OFFSET $4;
@@ -290,9 +267,7 @@ export class NewsService {
                     isBookmarked
                 }
             })
-
         }
-
         return initialNews
     }
 

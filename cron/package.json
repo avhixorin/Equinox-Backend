@@ -1,11 +1,15 @@
 {
   "type": "module",
   "dependencies": {
+    "@mozilla/readability": "^0.6.0",
     "@pinecone-database/pinecone": "^6.0.1",
     "@prisma/client": "^6.8.2",
+    "@types/cheerio": "^0.22.35",
+    "@types/jsdom": "^21.1.7",
     "axios": "^1.10.0",
     "cohere-ai": "^7.17.1",
     "dotenv": "^16.5.0",
+    "jsdom": "^26.1.0",
     "node-fetch": "^3.3.2",
     "rss-parser": "^3.13.0"
   },

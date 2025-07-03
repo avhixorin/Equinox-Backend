@@ -1,12 +1,15 @@
 import {fetchFnc} from "./fetch_rss.js"
-import { mainInit } from "./embed.js";
+import { mainInit, mainInitForYt } from "./embed.js";
 import dotenv from 'dotenv';
+import { fetchYouTubeArticles } from "./youtube_rss_parse.js";
 
 dotenv.config()
 
 const init = async () => {
-     (await fetchFnc());
+     await fetchFnc();
+     await fetchYouTubeArticles();
      await mainInit();
+     await mainInitForYt();
 }
 
 init().then(() => {

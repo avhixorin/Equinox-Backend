@@ -38,6 +38,7 @@ const queries = {
             offset: number
         }, context: any) => {
         const allNewsByCategory = await NewsService.getNewsByCategory(context, query, category, lim, offset);
+
         return allNewsByCategory;
     },
     getNewsOfSameParent: async (_: any, { query, parentNewsId, lim, offset }:

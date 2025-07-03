@@ -16,6 +16,9 @@ const parser = new Parser({
 });
 
 const rssFeeds = [
+    "https://www.thehindu.com/news/national/feeder/default.rss",
+    "https://indianexpress.com/section/india/feed/",
+    "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
     'https://feeds.feedburner.com/ndtvnews-top-stories',
     "https://www.firstpost.com/commonfeeds/v1/mfp/rss/india.xml",
     "https://www.dnaindia.com/feeds/india.xml",
@@ -43,13 +46,13 @@ const rssFeeds = [
 console.log("total news sources: ", rssFeeds.length);
 
 const HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES = [
-    40, 20, 20, 20, 20, 20, 20, 20, 20, 20,
     20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
-    20, 20
+    20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
+    20, 20, 20, 20, 20
 ];
 
 
-console.log("How much articles to take from each source: ", HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES.length);
+console.log("How much articles to take from each source array length: ", HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES.length);
 const isToday = (dateString: any) => {
     const today = new Date();
     const pubDate = new Date(dateString);
@@ -73,6 +76,8 @@ export const fetchFnc = async () => {
     }
 
     const sourcesArr = [
+        "Times of India",
+        "India | The Indian Express",
         "NDTV News Search Records Found 1000",
         "Firstpost Latest News",
         "The Quint",
@@ -94,13 +99,17 @@ export const fetchFnc = async () => {
         "Vindhya First",
         "Techgenyz",
         "IndiaTV: Google News Feed",
-        "India News in news18.com, India Latest News, India News"
+        "India News in news18.com, India Latest News, India News",
+        "India Latest News: Top National Headlines Today & Breaking News | The Hindu"
     ];
     console.log("sourcesArr length: ", sourcesArr.length);
 
     type source = typeof sourcesArr[number];
 
     const sourceMap: Record<source, string> = {
+        "Times of India": "Times of India",
+        "India | The Indian Express": "The Indian Express",
+        "India Latest News: Top National Headlines Today & Breaking News | The Hindu": "The Hindu",
         "NDTV News Search Records Found 1000": "NDTV",
         "Firstpost Latest News": "Firstpost",
         "The Quint": "The Quint",
@@ -150,7 +159,8 @@ export const fetchFnc = async () => {
                         pubDate: item.pubDate,
                         content: item.contentSnippet || '',
                         source: extractTitle(feed.title),
-                        imageUrl: extractImageUrl(item)
+                        imageUrl: extractImageUrl(item),
+                        youtube: false,
 
                     };
                     allArticles.push(article);
@@ -172,5 +182,7 @@ export const fetchFnc = async () => {
     await writeFile(writePath, JSON.stringify(allArticles, null, 2))
     console.log("✅ Successfully wrote articles.json");
 }
+
+
 
 

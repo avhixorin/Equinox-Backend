@@ -2,6 +2,7 @@ import { index } from "./createIndex.js";
 import { PrismaClient } from "@prisma/client";
 import { CohereClient } from "cohere-ai";
 import { readFile } from 'fs'
+import { extract as getLongDesc } from "./util/updateLongDescription.js";
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 
@@ -27,8 +28,10 @@ const cohere = new CohereClient({
 });
 
 const COHERE_DELAY_MS = 10000;
-const SIMILARITY_THRESHOLD = 0.37;
-const CATEGORY_THRESHOLD = 0.021;
+const SIMILARITY_THRESHOLD = 0.40;
+const SIMILARITY_THRESHOLD_YT = 0.5;
+const CATEGORY_THRESHOLD = 0.025;
+const CATEGORY_THRESHOLD_YT = 0.03;
 
 const categoryDocs = [
   `Category: Sports
@@ -206,6 +209,8 @@ interface Article {
   source?: string;
   pubDate: Date;
   imageUrl?: string;
+  youtube?: boolean;
+  views?: number;
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -285,7 +290,7 @@ export const processArticle = async (article: Article) => {
         data: { category: categories }
       });
 
-      await prisma.miniNews.create({
+      const miniNews = await prisma.miniNews.create({
         data: {
           title: article.title,
           content: article.content,
@@ -295,22 +300,30 @@ export const processArticle = async (article: Article) => {
           imageUrl: article.imageUrl,
           newsId: news.id,
           category: categories,
-          score: 1.2
+          score: 1.2,
+          youtube: article.youtube || false,
+          ytViews: article.views || 0
         }
       });
+
+
+      await getLongDesc({ id: miniNews.id, link: miniNews.link });
     }
     else {
-      const relevantArticle = await prisma.miniNews.findFirst({ where: { link: relatedLink } });
+      const relevantArticle = await prisma.miniNews.findFirst({
+        where: { link: relatedLink },
+        include: { news: true }
+      });
 
-      const oldCategories = relevantArticle?.category || [];
+      const oldCategories = relevantArticle?.news.category || [];
 
       if (oldCategories[0] !== "Others" && categories[0] !== "Others") {
         const newCategories = [...new Set([...oldCategories, ...categories])];
 
         console.log("Updating existing article with new categories:", newCategories);
 
-        await prisma.miniNews.update({
-          where: { id: relevantArticle?.id },
+        await prisma.news.update({
+          where: { id: relevantArticle?.newsId },
           data: {
             category: newCategories,
           }
@@ -318,7 +331,7 @@ export const processArticle = async (article: Article) => {
       }
 
       if (relevantArticle) {
-        await prisma.miniNews.create({
+        const miniNews = await prisma.miniNews.create({
           data: {
             title: article.title,
             content: article.content,
@@ -329,8 +342,13 @@ export const processArticle = async (article: Article) => {
             newsId: relevantArticle.newsId,
             category: categories,
             score: relatedScore.toFixed(2),
+            youtube: article.youtube || false,
+            ytViews: article.views || 0
           }
         });
+
+
+        await getLongDesc({ id: miniNews.id, link: miniNews.link });
       } else {
         console.warn("Related article not found in DB, skipping child creation.");
       }
@@ -342,7 +360,6 @@ export const processArticle = async (article: Article) => {
       category: article.source || "",
     }]);
 
-
     console.log(`✅ Processed: ${article.title}`);
   } catch (err) {
     console.error(`❌ Failed to process article: ${article.title}`, err);
@@ -351,6 +368,40 @@ export const processArticle = async (article: Article) => {
 
 export const mainInit = async () => {
   const articlePath = mode === "development" ? './articles.json' : './cron/articles.json';
+  readFile(articlePath, 'utf8', async (err, data) => {
+    if (err) {
+      console.error('Error reading articles file:', err);
+      return;
+    }
+    try {
+      const articles: Article[] = JSON.parse(data);
+      console.log('Articles loaded successfully:', articles.length);
+
+      for (let i = 0; i < articles.length; i++) {
+        const article = articles[i];
+        const pubDateinDateType = new Date(article.pubDate);
+        article.pubDate = pubDateinDateType;
+        if (article.link && article.title && article.source && article.content && article.imageUrl) {
+          await processArticle(article);
+        } else {
+          console.warn(`Skipping invalid article: ${JSON.stringify(article)}`);
+        }
+
+        await new Promise(resolve => setTimeout(() => {
+          resolve("to ensure rate limit not reached by pincone")
+        }, 500))
+      }
+
+      await notifyServerOfNewArticles();
+
+    } catch (parseError) {
+      console.error('Error parsing articles JSON:', parseError);
+    }
+  });
+};
+
+export const mainInitForYt = async () => {
+  const articlePath = mode === "development" ? './yt-articles.json' : './cron/yt-articles.json';
   readFile(articlePath, 'utf8', async (err, data) => {
     if (err) {
       console.error('Error reading articles file:', err);

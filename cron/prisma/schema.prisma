@@ -14,22 +14,26 @@ model News {
 }
 
 model MiniNews {
-  id            String                   @id @default(uuid())
-  title         String
-  link          String @unique
-  content       String?
-  pubDate       DateTime
-  source        String?
-  imageUrl      String?
-  newsId        String
-  category      String[]
-  // search_vector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, ((COALESCE(title, ''::text) || ' '::text) || COALESCE(content, ''::text)))"))
-  bookmarkedBy  Bookmark[]
-  news          News                     @relation(fields: [newsId], references: [id])
+  id              String                   @id @default(uuid())
+  title           String
+  link            String                   @unique(map: "unique_link_constraint")
+  content         String?
+  pubDate         DateTime
+  source          String?
+  longDescription String                   @default("")
+  youtube         Boolean                  @default(false)
+  imageUrl        String?
+  newsId          String
+  category        String[]
+  score           Decimal                  @default(0.37)
+  search_vector   Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, ((COALESCE(title, ''::text) || ' '::text) || COALESCE(content, ''::text)))"))
+  bookmarkedBy    Bookmark[]
+  news            News                     @relation(fields: [newsId], references: [id])
+  timelinedBy     Timeline[]
+  ytViews         Int                      @default(0)
 
-  score         Decimal                  @default(0.37)
 
-  // @@index([search_vector], map: "search_vector_idx", type: Gin)
+  @@index([search_vector], map: "search_vector_idx", type: Gin)
 }
 
 model User {
@@ -41,6 +45,7 @@ model User {
   salt           String
   Oauth          Boolean    @default(false)
   bookmarkedNews Bookmark[]
+  TimelineNews   Timeline[]
 }
 
 model Bookmark {
@@ -48,6 +53,15 @@ model Bookmark {
   miniNewsId String
   miniNews   MiniNews @relation(fields: [miniNewsId], references: [id])
   user       User     @relation(fields: [userId], references: [id])
+
+  @@id([userId, miniNewsId])
+}
+
+model Timeline {
+  userId     String
+  miniNewsId String
+  miniNews   MiniNews @relation(fields: [miniNewsId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([userId, miniNewsId])
 }

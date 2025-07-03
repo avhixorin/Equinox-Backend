@@ -7,6 +7,7 @@ import { NewsInfo } from "./news";
 import { BookmarkInfo } from "./bookmark";
 import { timelineInfo } from "./timeline";
 import { uspTimeLineInfo } from "./uspTimeline/bookmark copy";
+import { youtubeInfo } from "./Youtube";
 
 const typeDefs = `
     ${User.typeDefs}
@@ -20,6 +21,7 @@ const typeDefs = `
         ${BookmarkInfo.queries}
         ${timelineInfo.queries}
         ${uspTimeLineInfo.queries}
+        ${youtubeInfo.queries}
     }
 
     type Mutation {
@@ -41,7 +43,8 @@ const resolvers = {
         ...NewsInfo.resolvers.queries,
         ...BookmarkInfo.resolvers.queries,
         ...timelineInfo.resolvers.queries,
-        ...uspTimeLineInfo.resolvers.queries
+        ...uspTimeLineInfo.resolvers.queries,
+        ...youtubeInfo.resolvers.queries
     },
     Mutation: {
         ...User.resolvers.mutations,

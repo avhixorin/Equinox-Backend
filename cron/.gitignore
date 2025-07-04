@@ -5,3 +5,5 @@ package-lock.json
 dist
 articles.json
 yt-articles.json
+twitter-articles.json
+news.csv

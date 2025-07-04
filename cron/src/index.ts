@@ -1,7 +1,7 @@
-import {fetchFnc} from "./fetch_rss.js"
+import {fetchFnc} from "./scrape/fetch_rss.js"
 import { mainInit, mainInitForYt } from "./embed.js";
 import dotenv from 'dotenv';
-import { fetchYouTubeArticles } from "./youtube_rss_parse.js";
+import { fetchYouTubeArticles } from "./scrape/youtube_rss_parse.js";
 
 dotenv.config()
 

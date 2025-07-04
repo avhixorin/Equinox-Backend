@@ -1,1 +1,1 @@
-{"root":["./src/createIndex.ts","./src/embed.ts","./src/fetch_rss.ts","./src/index.ts","./src/youtube_rss_parse.ts","./src/util/updateLongDescription.ts"],"version":"5.8.3"}
+{"root":["./src/embed.ts","./src/index.ts","./src/scrape/fetch_rss.ts","./src/scrape/twitter_rss_parsing.ts","./src/scrape/youtube_rss_parse.ts","./src/util/createIndex.ts","./src/util/getCsv.ts","./src/util/updateLongDescription.ts"],"version":"5.8.3"}

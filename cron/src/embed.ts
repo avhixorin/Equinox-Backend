@@ -1,4 +1,4 @@
-import { index } from "./createIndex.js";
+import { index } from "./util/createIndex.js";
 import { PrismaClient } from "@prisma/client";
 import { CohereClient } from "cohere-ai";
 import { readFile } from 'fs'

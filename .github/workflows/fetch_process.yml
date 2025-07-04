@@ -1,6 +1,7 @@
-name: run-process-article
+name: run-fetch_process-article
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "41 12 * * *" # 6:11 PM IST
 
@@ -18,11 +19,13 @@ jobs:
           node-version: "20"
 
       - name: building (installing deps / transpiling)
-        run: cd ./cron && npm run prod
+        run: cd ./cron && npm run prod 
 
-      - name: Run Embed Script
+      - name: Run indexjs Script
         env:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BACKEND_GRAPHQL_URL: ${{ secrets.BACKEND_GRAPHQL_URL }}
-        run: node cron/dist/embed.js
+          MODE: ${ secrets.MODE }
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+        run: node cron/dist/index.js

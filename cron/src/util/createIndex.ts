@@ -1,20 +1,12 @@
-
 import { Pinecone } from '@pinecone-database/pinecone';
+import dotenv from 'dotenv';
 
-
+dotenv.config()
 const PINECONE_INDEX_NAME = 'midnews-js'
 const PINECONE_CATEGORY_INDEX = 'categorynews'
 const PINECONE_NAMESPACE = 'news-namespace'
 const PINECONE_CATEGORY_NAMESPACE = 'category-news-namespace'
 
-import dotenv from 'dotenv';
-dotenv.config({
-    path: './.env',
-    override: true,
-    debug: true,
-    encoding: 'utf8',
-
-})
 
 const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
 

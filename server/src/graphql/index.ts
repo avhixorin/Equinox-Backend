@@ -6,6 +6,8 @@ import { newsSubscription } from "./subscriptions";
 import { NewsInfo } from "./news";
 import { BookmarkInfo } from "./bookmark";
 import { timelineInfo } from "./timeline";
+import { uspTimeLineInfo } from "./uspTimeline/bookmark copy";
+import { youtubeInfo } from "./Youtube";
 
 const typeDefs = `
     ${User.typeDefs}
@@ -18,12 +20,15 @@ const typeDefs = `
         ${NewsInfo.queries}
         ${BookmarkInfo.queries}
         ${timelineInfo.queries}
+        ${uspTimeLineInfo.queries}
+        ${youtubeInfo.queries}
     }
 
     type Mutation {
         ${User.mutations}
         ${newsSubscription.mutations}
         ${BookmarkInfo.mutations}
+        ${uspTimeLineInfo.mutations}
     }
 
 `;
@@ -37,12 +42,15 @@ const resolvers = {
         ...User.resolvers.queries,
         ...NewsInfo.resolvers.queries,
         ...BookmarkInfo.resolvers.queries,
-        ...timelineInfo.resolvers.queries
+        ...timelineInfo.resolvers.queries,
+        ...uspTimeLineInfo.resolvers.queries,
+        ...youtubeInfo.resolvers.queries
     },
     Mutation: {
         ...User.resolvers.mutations,
         ...newsSubscription.resolvers.mutation,
-        ...BookmarkInfo.resolvers.mutations
+        ...BookmarkInfo.resolvers.mutations,
+        ...uspTimeLineInfo.resolvers.mutations
     }
 };
 

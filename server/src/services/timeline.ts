@@ -58,17 +58,17 @@ export class TimeLineService {
         const result = await prismaClient.$queryRaw<{
             day: string;
             category: string;
-            count: number
+            count: number;
         }[]>`
-        SELECT 
-            EXTRACT(DAY FROM "pubDate")::TEXT AS day,
-            "category",
-            COUNT(*)::INT AS count
-        FROM "MiniNews"
-        WHERE EXTRACT(MONTH FROM "pubDate") = ${monthNum}
-        GROUP BY day, "category"
-        ORDER BY day;
-    `;
+            SELECT 
+                EXTRACT(DAY FROM "pubDate")::TEXT AS day,
+                unnest("category") AS category,
+                COUNT(*)::INT AS count
+            FROM "MiniNews"
+            WHERE EXTRACT(MONTH FROM "pubDate") = ${monthNum}
+            GROUP BY day, category
+            ORDER BY day;
+        `;
 
         const grouped: Record<string, Record<string, number>> = {};
 
@@ -83,18 +83,24 @@ export class TimeLineService {
 
     public static async getTimeLineOfDay(dateInt: number) {
         const date = new Date(dateInt);
-        console.log("Getting timeline for date:", dateInt, "as Date:", date);
-        const result = await prismaClient.$queryRaw<{ category: string; count: number }[]>`
+        const dateOnly = new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD
+
+        const result = await prismaClient.$queryRaw<
+            { category: string; count: number }[]
+        >`
         SELECT 
-            "category",
+            unnest("category") AS category,
             COUNT(*)::INT AS count
         FROM "MiniNews"
-        WHERE "pubDate"::DATE = ${new Date(date).toISOString().split('T')[0]}::DATE
-        GROUP BY "category";
-        `;
+        WHERE "pubDate"::DATE = ${dateOnly}::DATE
+        GROUP BY category;
+    `;
 
         const data = Object.fromEntries(result.map(r => [r.category, r.count]));
         return data;
-
     }
+
 }
+
+
+

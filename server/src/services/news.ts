@@ -4,6 +4,7 @@ import { contextMiddleware } from "./user";
 export class NewsService {
 
     public static async getAllNews(context: any, query: string, limit: number, offset: number) {
+
         let id = null;
         try {
             const { id: userid } = contextMiddleware(context);
@@ -15,32 +16,28 @@ export class NewsService {
         let initialNews = null;
         console.log("inside get allnews")
         if (query?.trim() === "") {
+            console.log("offset:", offset, "limit:", limit)
             initialNews = await prismaClient.miniNews.findMany({
                 orderBy: {
                     pubDate: 'desc',
                 },
+                where: {
+                    youtube: false
+                },
                 skip: offset,
                 take: limit,
-                select: {
-                    id: true,
-                    title: true,
-                    content: true,
-                    category: true,
-                    newsId: true,
-                    pubDate: true,
-                    link: true,
-                    source: true,
-                    imageUrl: true,
-                }
             });
+
+            console.log("initialNews length:", initialNews.length)
 
         }
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-        SELECT id, title, content, category, "newsId", "pubDate", link, source, "imageUrl"
+        SELECT id, title, content, score, category, "newsId", "pubDate", link, source, "imageUrl"
         FROM "MiniNews"
         WHERE search_vector @@ plainto_tsquery('english', $1)
+        AND youtube = false
         ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
         LIMIT $2 OFFSET $3;
         `,
@@ -64,29 +61,65 @@ export class NewsService {
             })
 
         }
-        const grouped = new Map();
 
-        for (const item of initialNews as { newsId: string, pubDate: Date, source: string }[]) {
-            const date = new Date(item.pubDate);
-            const dateOnly = date.toISOString().split("T")[0];
-            const key = `${item.newsId}-${dateOnly}`;
-            if (!grouped.has(key)) {
-                grouped.set(key, []);
-            }
-            const group = grouped.get(key);
-            const alreadyExists = group.some((news: { source: string }) => news.source === item.source);
-            if (!alreadyExists) {
-                group.push(item);
-            }
-        }
-
-        const finalNews = Array.from(grouped.values());
-
-        return finalNews;
-
+        return initialNews
 
     }
 
+    public static async getSpecificNews(context: any, timestampInSeconds: String, category: string, limit: number, offset: number) {
+        console.log("timestampInSeconds:", timestampInSeconds, "category:", category);
+        const date = new Date(+timestampInSeconds);
+
+        let id = null;
+        try {
+            const { id: userid } = contextMiddleware(context);
+            id = userid;
+        } catch (error) {
+            console.log("fetching news without logging in!")
+        }
+
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const news = await prismaClient.miniNews.findMany({
+            where: {
+                youtube: false,
+                pubDate: {
+                    gte: startOfDay,
+                    lte: endOfDay,
+                },
+                category: {
+                    has: category
+                }
+            },
+            orderBy: {
+                pubDate: 'desc'
+            },
+            skip: offset,
+            take: limit,
+        });
+
+        console.log("Matching news count:", news.length);
+        if (id) {
+            const userBookmarkedData = await prismaClient.bookmark.findMany({
+                where: { userId: id }
+            })
+            const finalNews = (news as { id: string }[]).map((news: { id: string }) => {
+                const isBookmarked = userBookmarkedData.some((bookmark: { miniNewsId: string }) => bookmark.miniNewsId === news.id);
+                return {
+                    ...news,
+                    isBookmarked
+                }
+            })
+            return finalNews;
+
+        }
+        else return news;
+
+    }
 
     public static async getNewsByCategory(context: any, query: string, category: string, limit: number, offset: number) {
 
@@ -104,29 +137,22 @@ export class NewsService {
                     pubDate: 'desc',
                 },
                 where: {
-                    category
+                    youtube: false,
+                    category: {
+                        has: category
+                    }
                 },
                 skip: offset,
                 take: limit,
-                select: {
-                    id: true,
-                    title: true,
-                    content: true,
-                    category: true,
-                    newsId: true,
-                    pubDate: true,
-                    link: true,
-                    source: true,
-                    imageUrl: true,
-                }
             });
         }
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-        SELECT id, title, content, category, "newsId", "pubDate", link, source, "imageUrl"
+        SELECT id, title, content, score, youtube, category, "newsId", "pubDate", link, source, "imageUrl"
         FROM "MiniNews"
         WHERE category = $2
+          AND youtube = false
           AND search_vector @@ plainto_tsquery('english', $1)
         ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
         LIMIT $3 OFFSET $4;
@@ -139,6 +165,7 @@ export class NewsService {
         }
 
         if (!initialNews) throw new Error("error in fetching news!")
+
         if (id) {
             const userBookmarkedData = await prismaClient.bookmark.findMany({
                 where: { userId: id }
@@ -152,28 +179,39 @@ export class NewsService {
             })
 
         }
-        const grouped = new Map();
-
-        for (const item of initialNews as { newsId: string, pubDate: Date, source: string }[]) {
-            const date = new Date(item.pubDate);
-            const dateOnly = date.toISOString().split("T")[0];
-            const key = `${item.newsId}-${dateOnly}`;
-            if (!grouped.has(key)) {
-                grouped.set(key, []);
-            }
-            const group = grouped.get(key);
-            const alreadyExists = group.some((news: { source: string }) => news.source === item.source);
-            if (!alreadyExists) {
-                group.push(item);
-            }
-        }
-
-        const finalNews = Array.from(grouped.values());
-
-        return finalNews;
+        return initialNews;
     }
 
+    public static async getNewsById(context: any, miniNewsId: string) {
+        let id = null;
+        try {
+            const { id: userid } = contextMiddleware(context);
+            id = userid;
+        } catch (error) {
+            console.log("fetching news without logging in!")
+        }
 
+        const news = await prismaClient.miniNews.findUnique({
+            where: {
+                id: miniNewsId,
+                youtube: false
+            },
+        });
+
+        if (!news) throw new Error("error in fetching news!")
+        if (id) {
+            const userBookmarkedData = await prismaClient.bookmark.findMany({
+                where: { userId: id }
+            });
+            const isBookmarked = userBookmarkedData.some((bookmark: { miniNewsId: string }) => bookmark.miniNewsId === news.id);
+            return {
+                ...news,
+                isBookmarked
+            };
+        }
+        return news;
+
+    }
 
     public static async getNewsOfSameParent(context: any, query: string, parentNewsId: string, limit: number, offset: number) {
 
@@ -185,36 +223,27 @@ export class NewsService {
         } catch (error) {
             console.log("fetching news without logging in!")
         }
-        
+
         if (query?.trim() === "") {
             initialNews = await prismaClient.miniNews.findMany({
                 orderBy: {
                     pubDate: 'desc',
                 },
                 where: {
+                    youtube: false,
                     newsId: parentNewsId
                 },
                 skip: offset,
                 take: limit,
-                select: {
-                    id: true,
-                    title: true,
-                    content: true,
-                    category: true,
-                    newsId: true,
-                    pubDate: true,
-                    link: true,
-                    source: true,
-                    imageUrl: true,
-                }
             });
         }
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-            SELECT id, title, content, category, "newsId", "pubDate", link, source, "imageUrl"
+            SELECT id, title, content, score, youtube, category, "newsId", "pubDate", link, source, "imageUrl"
             FROM "MiniNews"
             WHERE "newsId" = $2
+            AND youtube = false
             AND search_vector @@ plainto_tsquery('english', $1)
             ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
             LIMIT $3 OFFSET $4;
@@ -238,29 +267,8 @@ export class NewsService {
                     isBookmarked
                 }
             })
-
         }
-        const grouped = new Map();
-
-        for (const item of initialNews as { newsId: string, pubDate: Date, source: string }[]) {
-            const date = new Date(item.pubDate);
-            const dateOnly = date.toISOString().split("T")[0];
-            const key = `${item.newsId}-${dateOnly}`;
-            if (!grouped.has(key)) {
-                grouped.set(key, []);
-            }
-            const group = grouped.get(key);
-            const alreadyExists = group.some((news: { source: string }) => news.source === item.source);
-            if (!alreadyExists) {
-                group.push(item);
-            }
-        }
-
-        const finalNews = Array.from(grouped.values());
-
-        return finalNews;
+        return initialNews
     }
-
-
 
 }

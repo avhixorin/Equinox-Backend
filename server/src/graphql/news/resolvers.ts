@@ -1,7 +1,27 @@
 import { NewsService } from "../../services/news"
 
 const queries = {
-    getNews: async (_: any, { query, lim, offset } :
+
+    getSpecificNews: async (_: any, { date, category, lim, offset }:
+        {
+            date: string,
+            category: string,
+            lim: number,
+            offset: number
+        }, context: any) => {
+        const allNews = await NewsService.getSpecificNews(context, date, category, lim, offset);
+        return allNews;
+    },
+
+    getNewsById: async (_: any, { miniNewsId }:
+        {
+            miniNewsId: string
+        }, context: any) => {
+        const allNews = await NewsService.getNewsById(context, miniNewsId);
+        return allNews;
+    },
+
+    getNews: async (_: any, { query, lim, offset }:
         {
             query: string,
             lim: number,
@@ -18,6 +38,7 @@ const queries = {
             offset: number
         }, context: any) => {
         const allNewsByCategory = await NewsService.getNewsByCategory(context, query, category, lim, offset);
+
         return allNewsByCategory;
     },
     getNewsOfSameParent: async (_: any, { query, parentNewsId, lim, offset }:

@@ -51,7 +51,6 @@ const HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES = [
     20, 20, 20, 20, 20
 ];
 
-
 console.log("How much articles to take from each source array length: ", HOW_MUCH_ARTICLES_TO_TAKE_FROM_EACH_SOURCES.length);
 const isToday = (dateString: any) => {
     const today = new Date();

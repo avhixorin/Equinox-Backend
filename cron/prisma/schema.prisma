@@ -31,6 +31,7 @@ model MiniNews {
   news            News                     @relation(fields: [newsId], references: [id])
   timelinedBy     Timeline[]
   ytViews         Int                      @default(0)
+  twitter         Boolean                  @default(false)
 
 
   @@index([search_vector], map: "search_vector_idx", type: Gin)

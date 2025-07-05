@@ -22,6 +22,7 @@ model MiniNews {
   source          String?
   longDescription String                   @default("")
   youtube         Boolean                  @default(false)
+  twitter         Boolean                  @default(false)
   imageUrl        String?
   newsId          String
   category        String[]

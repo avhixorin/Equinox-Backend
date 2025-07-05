@@ -1,12 +1,22 @@
 import { Readability } from "@mozilla/readability";
 import { Parser } from "json2csv"
+import { createObjectCsvWriter } from "csv-writer"
 import axios from "axios";
 import { JSDOM } from "jsdom";
 import { PrismaClient } from "@prisma/client";
 
 const client = new PrismaClient();
 
-export async function extract(news: { id: string; link: string }) {
+const csvWriter = createObjectCsvWriter({
+  path: './newsData.csv',
+  header: [
+    { id: 'title', title: 'Title' },
+    { id: 'content', title: 'Content' }
+  ],
+  alwaysQuote: true,
+});
+
+export async function extract(news: { id?: string; link: string }) {
   try {
     const { data: html } = await axios.get(news.link, {
       headers: {
@@ -32,42 +42,13 @@ export async function extract(news: { id: string; link: string }) {
         .replace(/(First Published|Last Updated):.+?\n/gi, "")
         .replace(/\s{2,}/g, " ")
 
-      //write now to store longDescription for model training purpose to make csv from this data.
-      console.log("\nUpdating in DB...");
-      await client.miniNews.update({
-        where: { id: news.id },
-        data: {
-          longDescription: cleaned,
-        },
-      });
+      const records = {
+        title,
+        content: cleaned
+      }
 
-      //once we have model
-      // const record = [{
-      //   newsId: news.id,
-      //   link: news.link,
-      //   title: title,
-      //   fullNews: cleaned
-      // }];
-
-      // const parser = new Parser({ fields: ['newsId', 'link', 'title', 'fullNews'] });
-      // const csvData = parser.parse(record);
-
-      // const response = await axios.post(
-      //   'https://your-model-endpoint.com/detect-bias',
-      //   csvData,
-      //   {
-      //     headers: {
-      //       'Content-Type': 'text/csv'
-      //     }
-      //   }
-      // );
-
-      // const bias = response.data.bias || 'unknown';
-
-      // await client.miniNews.update({
-      //   where: { id: news.id },
-      //   data: { bias }
-      // });
+      await csvWriter.writeRecords([records]);
+      console.log(`✅ CSV file created with ${records.title} records.`);
 
     } else {
       console.warn(`⚠️ No article content found at ${news.link}`);
@@ -78,17 +59,39 @@ export async function extract(news: { id: string; link: string }) {
 }
 
 
-// const newsArticle = [
-//   "https://www.news18.com/movies/setback-to-jacqueline-fernandez-as-delhi-hc-rejects-her-plea-in-rs-200-crore-money-laundering-case-ws-l-9419017.html",
-//   "https://www.news18.com/cities/new-delhi-news/end-of-life-vehicles-will-not-be-impounded-as-delhi-govt-puts-eol-policy-on-hold-amid-backlash-ws-l-9419002.html"
-// ];
+import fs from "fs";
+import csv from "csv-parser";
 
-// (async () => {
-//   for (let i = 0; i < newsArticle.length; i++) {
-//     const feed = newsArticle[i];
-//     await extract({ link: feed, id: `${i}` });
-//     console.log(`✅ Processed ${i + 1}/${newsArticle.length}`);
-//   }
-// })();
+export function extractLinksFromCsv(csvPath: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    const links: string[] = [];
+
+    fs.createReadStream(csvPath)
+      .pipe(csv())
+      .on("data", (row: Record<string, string>) => {
+        if (row.link) {
+          links.push(row.link);
+        }
+      })
+      .on("end", () => {
+        console.log(`✅ Extracted ${links.length} links.`);
+        resolve(links);
+      })
+      .on("error", (err: Error) => {
+        console.error("❌ Error reading CSV:", err.message);
+        reject(err);
+      });
+  });
+}
+
+
+(async () => {
+  const newsArticle = await extractLinksFromCsv("yourfile.csv");
+  for (let i = 0; i < newsArticle.length; i++) {
+    const feed = newsArticle[i];
+    await extract({ link: feed, id: `${i}` });
+    console.log(`✅ Processed ${i + 1}/${newsArticle.length}`);
+  }
+})();
 
 

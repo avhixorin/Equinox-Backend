@@ -290,7 +290,6 @@ export const processArticle = async (article: Article) => {
     }
 
 
-    console.log("categoryDerived:", categoryDerived, "score", rerankedResultsOfCategory?.result?.hits[0]?._score);
 
     if (isNew) {
       const news = await prisma.news.create({

@@ -1,7 +1,6 @@
 import Parser from 'rss-parser';
 import { writeFile } from 'fs/promises';
 import dotenv from 'dotenv';
-import { stat } from 'fs';
 
 dotenv.config();
 const mode = process.env.MODE || "development";
@@ -91,10 +90,9 @@ const channels = [
     "Piers Morgan Uncensored"
 ];
 
-const ytRssFeeds = Object.entries(ChannelIdMap).map(([channelName, channelId]) => {
+const ytRssFeeds = Object.entries(ChannelIdMap).map(([_, channelId]) => {
     return `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
 })
-
 
 const LIMIT = 5;
 
@@ -124,8 +122,6 @@ export const fetchYouTubeArticles = async () => {
                 let link = entry.link || `https://www.youtube.com/watch?v=${(entry as any).videoId}`
                 if (allLinks.includes(link)) continue;
                 const group = (entry as any).mediaGroup;
-
-
 
                 const published = entry.pubDate;
                 if (!published || !isToday(published)) continue;

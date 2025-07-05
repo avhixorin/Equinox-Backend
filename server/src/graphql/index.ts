@@ -8,6 +8,7 @@ import { BookmarkInfo } from "./bookmark";
 import { timelineInfo } from "./timeline";
 import { uspTimeLineInfo } from "./uspTimeline/bookmark copy";
 import { youtubeInfo } from "./Youtube";
+import { XInfo } from "./twitter";
 
 const typeDefs = `
     ${User.typeDefs}
@@ -22,6 +23,7 @@ const typeDefs = `
         ${timelineInfo.queries}
         ${uspTimeLineInfo.queries}
         ${youtubeInfo.queries}
+        ${XInfo.queries}
     }
 
     type Mutation {
@@ -44,7 +46,8 @@ const resolvers = {
         ...BookmarkInfo.resolvers.queries,
         ...timelineInfo.resolvers.queries,
         ...uspTimeLineInfo.resolvers.queries,
-        ...youtubeInfo.resolvers.queries
+        ...youtubeInfo.resolvers.queries,
+        ...XInfo.resolvers.queries
     },
     Mutation: {
         ...User.resolvers.mutations,
@@ -53,7 +56,6 @@ const resolvers = {
         ...uspTimeLineInfo.resolvers.mutations
     }
 };
-
 
 
 export const schema = makeExecutableSchema({

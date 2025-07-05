@@ -231,6 +231,7 @@ export class NewsService {
                 },
                 where: {
                     youtube: false,
+                    twitter: false,
                     newsId: parentNewsId
                 },
                 skip: offset,

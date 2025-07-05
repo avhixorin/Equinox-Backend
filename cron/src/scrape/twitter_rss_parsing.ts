@@ -182,4 +182,3 @@ const scrapeTweets = async () => {
   console.log(`Scraped ${allTweets.length} tweets with images`);
 };
 
-scrapeTweets();

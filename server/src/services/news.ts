@@ -22,7 +22,8 @@ export class NewsService {
                     pubDate: 'desc',
                 },
                 where: {
-                    youtube: false
+                    youtube: false,
+                    twitter: false
                 },
                 skip: offset,
                 take: limit,
@@ -38,6 +39,7 @@ export class NewsService {
         FROM "MiniNews"
         WHERE search_vector @@ plainto_tsquery('english', $1)
         AND youtube = false
+        AND twitter = false
         ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
         LIMIT $2 OFFSET $3;
         `,
@@ -87,6 +89,7 @@ export class NewsService {
         const news = await prismaClient.miniNews.findMany({
             where: {
                 youtube: false,
+                twitter: false,
                 pubDate: {
                     gte: startOfDay,
                     lte: endOfDay,
@@ -138,6 +141,7 @@ export class NewsService {
                 },
                 where: {
                     youtube: false,
+                    twitter: false,
                     category: {
                         has: category
                     }
@@ -153,6 +157,7 @@ export class NewsService {
         FROM "MiniNews"
         WHERE category = $2
           AND youtube = false
+          AND twitter = false
           AND search_vector @@ plainto_tsquery('english', $1)
         ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
         LIMIT $3 OFFSET $4;
@@ -194,7 +199,8 @@ export class NewsService {
         const news = await prismaClient.miniNews.findUnique({
             where: {
                 id: miniNewsId,
-                youtube: false
+                youtube: false,
+                twitter: false
             },
         });
 
@@ -245,6 +251,7 @@ export class NewsService {
             FROM "MiniNews"
             WHERE "newsId" = $2
             AND youtube = false
+            AND twitter = false
             AND search_vector @@ plainto_tsquery('english', $1)
             ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
             LIMIT $3 OFFSET $4;

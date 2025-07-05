@@ -6,10 +6,11 @@ import { fetchYouTubeArticles } from "./scrape/youtube_rss_parse.js";
 dotenv.config()
 
 const init = async () => {
-     await fetchFnc();
-     await fetchYouTubeArticles();
-     await mainInit();
-     await mainInitForYt();
+    console.log("cron job stopped");
+    //  await fetchFnc();
+    //  await fetchYouTubeArticles();
+    //  await mainInit();
+    //  await mainInitForYt();
 }
 
 init().then(() => {

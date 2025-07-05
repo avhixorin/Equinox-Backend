@@ -16,7 +16,7 @@ const csvWriter = createObjectCsvWriter({
   alwaysQuote: true,
 });
 
-export async function extract(news: { id?: string; link: string }) {
+export async function extract(news: { id: string; link: string }) {
   try {
     const { data: html } = await axios.get(news.link, {
       headers: {
@@ -35,20 +35,21 @@ export async function extract(news: { id?: string; link: string }) {
     const article = reader.parse();
 
     if (article?.textContent) {
-      const title = dom.window.document.title || "Untitled";
-
+      
       const cleaned = article.textContent
         .replace(/(?:twitter\.com|facebook\.com|instagram\.com)[^\s]+/gi, "")
         .replace(/(First Published|Last Updated):.+?\n/gi, "")
         .replace(/\s{2,}/g, " ")
 
-      const records = {
-        title,
-        content: cleaned
-      }
+      await client.miniNews.update({
+        where: { id: news.id },
+        data: {
+          longDescription: cleaned,
+        }
+      });
 
-      await csvWriter.writeRecords([records]);
-      console.log(`✅ CSV file created with ${records.title} records.`);
+      // await csvWriter.writeRecords([records]);
+      // console.log(`✅ CSV file created with ${records.title} records.`);
 
     } else {
       console.warn(`⚠️ No article content found at ${news.link}`);
@@ -85,13 +86,13 @@ export function extractLinksFromCsv(csvPath: string): Promise<string[]> {
 }
 
 
-(async () => {
-  const newsArticle = await extractLinksFromCsv("yourfile.csv");
-  for (let i = 0; i < newsArticle.length; i++) {
-    const feed = newsArticle[i];
-    await extract({ link: feed, id: `${i}` });
-    console.log(`✅ Processed ${i + 1}/${newsArticle.length}`);
-  }
-})();
+// (async () => {
+//   const newsArticle = await extractLinksFromCsv("yourfile.csv");
+//   for (let i = 0; i < newsArticle.length; i++) {
+//     const feed = newsArticle[i];
+//     await extract({ link: feed, id: `${i}` });
+//     console.log(`✅ Processed ${i + 1}/${newsArticle.length}`);
+//   }
+// })();
 
 

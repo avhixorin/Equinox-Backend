@@ -1,8 +1,6 @@
 import puppeteer from 'puppeteer';
 import * as cheerio from 'cheerio';
 import { PrismaClient } from '@prisma/client';
-import { title } from 'process';
-import { link } from 'joi';
 
 const prisma = new PrismaClient();
 const TwitterChannels = [
@@ -66,7 +64,6 @@ function cleanTitle(raw: string, maxLength: number = 100): string {
     .slice(0, maxLength)
     .concat(raw.length > maxLength ? '...' : '');
 }
-
 
 function constructImageUrl(rawSrc: string
   | null | undefined

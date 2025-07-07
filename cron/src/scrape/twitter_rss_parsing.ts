@@ -1,6 +1,7 @@
-import puppeteer from 'puppeteer';
 import * as cheerio from 'cheerio';
 import { PrismaClient } from '@prisma/client';
+import { writeFile } from 'fs';
+import puppeteer from 'puppeteer'
 
 const prisma = new PrismaClient();
 const TwitterChannels = [
@@ -52,6 +53,7 @@ const isToday = (dateStr: string) => {
 
 function cleanTitle(raw: string, maxLength: number = 100): string {
   return raw
+
     .replace(/[\n\r]+/g, ' ')                            // Remove newlines
     .replace(/[\u{1F600}-\u{1F64F}]/gu, '')              // Remove emojis (emoticons)
     .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')              // Remove emojis (symbols & pictographs)
@@ -74,15 +76,13 @@ function constructImageUrl(rawSrc: string
   return `https://nitter.net/pic/${cleanPath}`;
 }
 
-const scrapeTweets = async () => {
+export const scrapeTweets = async () => {
   const allTweets: any[] = [];
-
-  const browser = await puppeteer.launch({
-    executablePath: '/usr/bin/google-chrome',
-    headless: false,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
+
+  await page.setUserAgent('Mozilla/5.0 ...');
+  await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
 
   for (const source of TwitterChannels) {
     const url = `https://nitter.net/${source}`;
@@ -102,12 +102,11 @@ const scrapeTweets = async () => {
 
         content = content.split("#")[0].trim()
         content = content.split("https://")[0].trim()
-        content = content.split("  ")[0].trim()
-        content = content.split(". .")[0].trim()
-        content = content.split("..")[0].trim()
-        content = content.split(":")[0].trim()
-        content = cleanTitle(content, 100).trim()
+        content.replace("  ", '')
+        content.replace(". .", '')
+        content.replace("..", '')
 
+        content = cleanTitle(content, 100).trim()
 
         const time = $(el).find('.tweet-date a').attr('title') || '';
 
@@ -127,11 +126,11 @@ const scrapeTweets = async () => {
           twitterUrl = `https://x.com${cleanPath}`;
         }
 
-        if (!time || !isToday(time)) {
-          console.log("Skipping tweet due to invalid date:", time);
-          return;
-        }
-        
+        // if (!time || !isToday(time)) {
+        //   console.log("Skipping tweet due to invalid date:", time);
+        //   return;
+        // }
+
 
         const cleanedStr = time.replace('·', '').replace(/\s+/g, ' ').trim();
         const tweetDate = new Date(cleanedStr);
@@ -148,28 +147,30 @@ const scrapeTweets = async () => {
         }
 
         console.log("Tweet data:", tweetNews);
-        if (!tweetNews.title || tweetNews.title.length < 20 || tweetNews.title.startsWith("Enable hls") || !tweetNews.link || !tweetDate) {
+        if (!tweetNews.title || tweetNews.title.length < 15 || tweetNews.title.startsWith("Enable hls") || !tweetNews.link || !tweetDate) {
           console.log("Skipping tweet due to missing or invalid data:", tweetNews);
           return;
         }
 
-        try {
-          const news = await prisma.news.create({ data: { category: [] } })
-          await prisma.miniNews.create({
-            data: {
-              title: tweetNews.title,
-              link: tweetNews.link,
-              pubDate: tweetDate,
-              source: tweetNews.source || "unknown source",
-              imageUrl: tweetNews.imageUrl || "",
-              twitter: true,
-              newsId: news.id
-            }
-          });
-          console.log(`Saved tweet: ${tweetNews.title} from ${tweetNews.source}`);
-        } catch (error) {
-          console.error("Error saving tweet to database:", error);
-        }
+        allTweets.push(tweetNews);
+
+        // try {
+        //   const news = await prisma.news.create({ data: { category: [] } })
+        //   await prisma.miniNews.create({
+        //     data: {
+        //       title: tweetNews.title,
+        //       link: tweetNews.link,
+        //       pubDate: tweetDate,
+        //       source: tweetNews.source || "unknown source",
+        //       imageUrl: tweetNews.imageUrl || "",
+        //       twitter: true,
+        //       newsId: news.id
+        //     }
+        //   });
+        //   console.log(`Saved tweet: ${tweetNews.title} from ${tweetNews.source}`);
+        // } catch (error) {
+        //   console.error("Error saving tweet to database:", error);
+        // }
       });
 
     } catch (err) {
@@ -178,7 +179,13 @@ const scrapeTweets = async () => {
   }
 
   await browser.close();
-  // await writeFile('twitter-articles.json', JSON.stringify(allTweets, null, 2));
+  await new Promise<void>((resolve, reject) => {
+    writeFile('twitter-articles.json', JSON.stringify(allTweets, null, 2), (err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
   console.log(`Scraped ${allTweets.length} tweets with images`);
 };
 
+// scrapeTweets()

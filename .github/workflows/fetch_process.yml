@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "20"
-
+          
       - name: building (installing deps / transpiling)
         run: cd ./cron && npm run prod 
 
@@ -29,3 +29,6 @@ jobs:
           MODE: ${ secrets.MODE }
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
         run: node cron/dist/index.js
+
+     
+

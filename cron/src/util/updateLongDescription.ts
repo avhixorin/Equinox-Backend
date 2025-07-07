@@ -19,7 +19,9 @@ export async function setLongDescription(news: { id: string; link: string }) {
   try {
     const { data: html } = await axios.get(news.link, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; NewsScraperBot/1.0)"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
       }
     });
 
@@ -34,7 +36,7 @@ export async function setLongDescription(news: { id: string; link: string }) {
     const article = reader.parse();
 
     if (article?.textContent) {
-      
+
       const cleaned = article.textContent
         .replace(/(?:twitter\.com|facebook\.com|instagram\.com)[^\s]+/gi, "")
         .replace(/(First Published|Last Updated):.+?\n/gi, "")

@@ -1,14 +1,12 @@
-import { index } from "./util/createIndex.js";
-import { PrismaClient } from "@prisma/client";
+import { index } from "./util/createVectorDbIndex.js";
 import { CohereClient } from "cohere-ai";
 import { readFile } from 'fs'
-import { extract as getLongDesc } from "./util/updateLongDescription.js";
-import fetch from 'node-fetch';
 import dotenv from 'dotenv';
+import { notifyServerOfNewArticles } from "./util/notifyServer.js";
+import { handleNewArticle, handleRelatedArticle } from "./util/handleArticle.js";
+import { Article, CATEGORY_THRESHOLD, categoryDocs, categoryNames, COHERE_DELAY_MS, SIMILARITY_THRESHOLD } from "./constant.js";
 
 dotenv.config()
-
-const prisma = new PrismaClient();
 
 const COHERE_API_KEY = process.env.COHERE_API_KEY;
 const BACKEND_URL = process.env.BACKEND_GRAPHQL_URL;
@@ -19,199 +17,14 @@ if (!BACKEND_URL) {
   process.exit(1);
 }
 
-
 if (!COHERE_API_KEY) {
   throw new Error("COHERE_API_KEY is missing from environment variables.");
 }
+
 const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY!,
 });
 
-const COHERE_DELAY_MS = 10000;
-const SIMILARITY_THRESHOLD = 0.40;
-const SIMILARITY_THRESHOLD_YT = 0.5;
-const CATEGORY_THRESHOLD = 0.025;
-const CATEGORY_THRESHOLD_YT = 0.03;
-
-const categoryDocs = [
-  `Category: Sports
-Description: News about competitive physical games, athletes, teams, leagues, tournaments, and major sporting events.
-Examples:
-- Messi scores hat-trick as Argentina wins Copa America.
-- Olympic Games postponed due to extreme heat.
-- Indian cricketer suspended for match-fixing scandal.
-- NBA star announces retirement after 20-year career.
-- FIFA investigates referee conduct after controversial final.`,
-
-  `Category: Politics
-Description: Political parties, elections, leaders, legislation, and diplomatic events — excludes general protests unless clearly political.News about governments, elections, leaders, policy decisions, international relations, and diplomatic matters. Includes actions or statements by influential state-affiliated figures.
-Examples:
-- UK Prime Minister meets EU leaders to discuss trade deal.
-- Pro-democracy candidate wins landslide election in Thailand.
-- Parliament passes controversial immigration bill.
-- President vetoes healthcare reform plan.
-- King Charles cancels Middle East visit due to regional conflict concerns
-- Opposition leader arrested ahead of national elections.`,
-
-  `Category: Government
-Description: Government policy, state actions, public institutions — separate from political debate.
-Examples:
-- Ministry of Finance proposes new tax code.
-- Public transport authority launches metro expansion plan.
-- Government allocates $3B for rural education.
-- Officials roll out digital ID system across the state.
-- State government to provide free internet in public libraries.`,
-
-  `Category: Business
-Description: Economy, companies, market trends, finance, and trade — includes industry protests or pricing issues.
-Examples:
-- Mango farmers protest market crash in Tamil Nadu.
-- Tesla beats earnings estimates, stock jumps 7%.
-- Inflation impacts grocery prices nationwide.
-- Amazon expands same-day delivery in India.
-- Indian rupee weakens against dollar amid global uncertainty.`,
-
-  `Category: Agriculture
-Description: Farming, crop issues, food supply chains, and rural livelihoods — includes farmer protests.
-Examples:
-- Farmers dump tomatoes on highway to protest price crash.
-- Locust swarm devastates cotton crops in Gujarat.
-- Govt announces support price for rice farmers.
-- Dairy unions demand better milk procurement rates.
-- Floods destroy paddy fields across eastern Assam.`,
-
-  `Category: Health
-Description: Public health alerts, medical research, disease outbreaks, mental health, and hospital infrastructure.
-Examples:
-- WHO declares new virus outbreak in Southeast Asia.
-- Breakthrough in cancer treatment shows 90% success rate.
-- Hospital staff strike over working conditions.
-- Mental health hotline receives record number of calls.
-- Surge in respiratory illnesses linked to urban air pollution.`,
-
-  `Category: Science
-Description: Scientific discoveries, research studies, natural phenomena, and innovation in physical or life sciences.
-Examples:
-- Scientists detect signals from distant galaxy.
-- New AI model maps ocean floor with 95% accuracy.
-- Research links climate change to animal migration patterns.
-- Volcano study reveals pre-eruption chemical signature.
-- Study finds microplastics in Antarctic snow.`,
-
-  `Category: Technology
-Description: Tech innovation, gadgets, apps, startups, and cybersecurity — excludes generic business stories unless tech-focused.
-Examples:
-- Apple unveils iPhone with neural interface chip.
-- Google pauses AI chatbot after controversial responses.
-- Cyberattack hits major Indian bank.
-- New startup uses drones for warehouse logistics.
-- Microsoft introduces real-time translation in video calls.`,
-
-  `Category: Crime
-Description: Arrests, investigations, trials, terrorism, and illegal activities — includes charges against public figures.
-Examples:
-- Rapper arrested on terror charge, released on bail.
-- Man sentenced to life for serial killings.
-- Police uncover international smuggling network.
-- Tech CEO charged with insider trading.
-- Woman caught attempting to smuggle gold in shoe soles.`,
-
-  `Category: Accidents
-  Description: Unintended harmful events like crashes, natural disasters, and technical failures — excludes intentional crimes.
-  Examples:
-  - Train derails in Odisha, killing 50 passengers.
-  - Amusement park ride malfunctions, injures 12.
-  - Factory explosion in China causes massive fire.
-  - Volcano in Indonesia spews ash 11km high, prompting flight alerts.
-  - Floods submerge dozens of villages in Assam.
-  - Landslide in Himachal traps tourists in remote valley.`,
-
-  `Category: Entertainment
-Description: Celebrities, film, music, television, arts — includes celebrity gossip, cultural events, and awards.
-Examples:
-- Irish hip-hop group Kneecap releases new album.
-- Actor wins Best Director at Cannes Film Festival.
-- Singer arrested in DUI case, fans divided.
-- Bollywood legend honored with lifetime achievement award.
-- Netflix announces reboot of cult classic 90s show.`,
-
-  `Category: Environment
-Description: Climate change, pollution, conservation, disasters related to natural systems.
-Examples:
-- Amazon deforestation hits 15-year high.
-- Heatwave in Europe sparks wildfires.
-- Coral bleaching spreads due to rising ocean temperatures.
-- UN climate report warns of tipping points.
-- River cleanup drive removes 20 tons of plastic waste.`,
-
-  `Category: Education
-Description: Schools, colleges, exams, policies, student protests (if academic), and reforms in education.
-Examples:
-- Board exams delayed due to teacher strike.
-- University introduces AI to personalize learning.
-- Students protest against fee hike at Delhi University.
-- Govt launches literacy program in tribal regions.
-- High school integrates climate studies into curriculum.`,
-
-  `Category: Military
-Description: Armed forces, war, weapons, military alliances, defense operations. 
-Examples:
-- Indian Army conducts operation near LoC.
-- NATO launches joint exercises in the Baltic.
-- Drone strike targets rebel base in Syria.
-- A hospital in the Israeli town of Beersheba was hit as Iran fired a barrage of missiles at the country. focus on missiles attacks
-- Govt signs $8B arms deal with US defense contractor.
-- Military satellite launch enhances surveillance capability.`,
-
-  `Category: Religion
-Description: Faith, religious leaders, pilgrimages, community events, conflicts tied to religion.
-Examples:
-- Pope visits Gaza for peace mission.
-- Hindu festival attracts 1.5 million pilgrims.
-- Mosque vandalized in communal clash.
-- Religious leaders oppose new marriage bill.
-- Sikh community organizes blood donation drive during Gurpurab.`,
-
-  `Category: Startup
-Description: Young businesses, venture capital, product launches, and entrepreneurship. Corporate policies, layoffs, internal memos, workplace regulations.
-Examples:
-- AI startup raises $25M for fraud detection software.
-- Healthtech firm builds wearable for diabetes tracking.
-- Agritech startup helps small farmers sell directly.
-- Founders of social app featured in Forbes 30 Under 30.
-- Google lays off 1,000 employees in cost-cutting move
-- Edtech startup offers free upskilling to rural youth.`
-];
-
-const categoryNames = [
-  "Sports",
-  "Politics",
-  "Government",
-  "Business",
-  "Agriculture",
-  "Health",
-  "Science",
-  "Technology",
-  "Crime",
-  "Accidents",
-  "Entertainment",
-  "Environment",
-  "Education",
-  "Military",
-  "Religion",
-  "Startup"
-];
-
-interface Article {
-  link: string;
-  title: string;
-  content?: string;
-  source?: string;
-  pubDate: Date;
-  imageUrl?: string;
-  youtube?: boolean;
-  views?: number;
-}
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -219,7 +32,9 @@ export const processArticle = async (article: Article) => {
   console.log(`\n\n[+] Processing article: ${article.title}`);
 
   try {
-    const queryText = `${article.title}. ${article.content}`;
+    let queryText = `${article.title}`;
+    if (article.content)
+      queryText += `${article.content}`;
 
     const topNewsResults = await (await index).searchRecords({
       query: { topK: 10, inputs: { text: queryText } },
@@ -239,6 +54,7 @@ export const processArticle = async (article: Article) => {
       const rerankRelated = await cohere.rerank({
         query: queryText,
         documents: topNewsChunks,
+        model: 'rerank-multilingual-v3.0',
         topN: 1
       });
 
@@ -248,7 +64,7 @@ export const processArticle = async (article: Article) => {
       relatedLink = topNewsLinks[relatedIndex];
     }
 
-    if(isNew && article.youtube) {
+    if (isNew && article.youtube || isNew && article.twitter) {
       console.log("skipping this youtube videos since it is not related to any website news feeds!")
       return;
     }
@@ -261,7 +77,6 @@ export const processArticle = async (article: Article) => {
       documents: categoryDocs,
       topN: 1
     });
-
 
     const categories = [];
 
@@ -289,76 +104,10 @@ export const processArticle = async (article: Article) => {
       console.log(`Category: ${category}`);
     }
 
-
-
-    if (isNew) {
-      const news = await prisma.news.create({
-        data: { category: categories }
-      });
-
-      const miniNews = await prisma.miniNews.create({
-        data: {
-          title: article.title,
-          content: article.content,
-          link: article.link,
-          source: article.source,
-          pubDate: article.pubDate,
-          imageUrl: article.imageUrl,
-          newsId: news.id,
-          category: categories,
-          score: 1.2,
-          youtube: article.youtube || false,
-          ytViews: article.views || 0
-        }
-      });
-
-
-      await getLongDesc({ id: miniNews.id, link: miniNews.link });
-    }
-    else {
-      const relevantArticle = await prisma.miniNews.findFirst({
-        where: { link: relatedLink },
-        include: { news: true }
-      });
-
-      const oldCategories = relevantArticle?.news.category || [];
-
-      if (oldCategories[0] !== "Others" && categories[0] !== "Others") {
-        const newCategories = [...new Set([...oldCategories, ...categories])];
-
-        console.log("Updating existing article with new categories:", newCategories);
-
-        await prisma.news.update({
-          where: { id: relevantArticle?.newsId },
-          data: {
-            category: newCategories,
-          }
-        });
-      }
-
-      if (relevantArticle) {
-        const miniNews = await prisma.miniNews.create({
-          data: {
-            title: article.title,
-            content: article.content,
-            link: article.link,
-            source: article.source,
-            pubDate: article.pubDate,
-            imageUrl: article.imageUrl,
-            newsId: relevantArticle.newsId,
-            category: categories,
-            score: relatedScore.toFixed(2),
-            youtube: article.youtube || false,
-            ytViews: article.views || 0
-          }
-        });
-
-
-        await getLongDesc({ id: miniNews.id, link: miniNews.link });
-      } else {
-        console.warn("Related article not found in DB, skipping child creation.");
-      }
-    }
+    if (isNew)
+      handleNewArticle(article, categories)
+    else
+      handleRelatedArticle(article, categories, relatedLink, relatedScore);
 
     await (await index).upsertRecords([{
       id: article.link,
@@ -366,14 +115,14 @@ export const processArticle = async (article: Article) => {
       category: article.source || "",
     }]);
 
-    console.log(`✅ Processed: ${article.title}`);
+    console.log(`Processed: ${article.title}`);
   } catch (err) {
-    console.error(`❌ Failed to process article: ${article.title}`, err);
+    console.error(`Failed to process article: ${article.title}`, err);
   }
 };
 
-export const mainInit = async () => {
-  const articlePath = mode === "development" ? './articles.json' : './cron/articles.json';
+export const processNewsFromFile = async (jsonName: string) => {
+  const articlePath = mode === "development" ? `./${jsonName}` : `./cron/${jsonName}`;
   readFile(articlePath, 'utf8', async (err, data) => {
     if (err) {
       console.error('Error reading articles file:', err);
@@ -387,10 +136,26 @@ export const mainInit = async () => {
         const article = articles[i];
         const pubDateinDateType = new Date(article.pubDate);
         article.pubDate = pubDateinDateType;
-        if (article.link && article.title && article.source && article.content && article.imageUrl) {
+
+        let canWeProcessArticle = false;
+        switch (jsonName) {
+          case "articles.json":
+            canWeProcessArticle = article.link && article.title && article.source && article.content && article.imageUrl ? true : false
+            break;
+
+          case "yt-articles.json":
+            canWeProcessArticle = article.link && article.title && article.source && article.content && article.imageUrl ? true : false
+            break;
+
+          case "twitter-articles.json":
+            canWeProcessArticle = article.link && article.title && article.source ? true : false
+            break;
+
+        }
+        if (canWeProcessArticle) {
           await processArticle(article);
         } else {
-          console.warn(`Skipping invalid article: ${JSON.stringify(article)}`);
+          console.warn(`Skipping processing of article due to missing required fields.`);
         }
 
         await new Promise(resolve => setTimeout(() => {
@@ -398,7 +163,7 @@ export const mainInit = async () => {
         }, 500))
       }
 
-      await notifyServerOfNewArticles();
+      await notifyServerOfNewArticles(BACKEND_URL);
 
     } catch (parseError) {
       console.error('Error parsing articles JSON:', parseError);
@@ -406,62 +171,4 @@ export const mainInit = async () => {
   });
 };
 
-export const mainInitForYt = async () => {
-  const articlePath = mode === "development" ? './yt-articles.json' : './cron/yt-articles.json';
-  readFile(articlePath, 'utf8', async (err, data) => {
-    if (err) {
-      console.error('Error reading articles file:', err);
-      return;
-    }
-    try {
-      const articles: Article[] = JSON.parse(data);
-      console.log('Articles loaded successfully:', articles.length);
 
-      for (let i = 0; i < articles.length; i++) {
-        const article = articles[i];
-        const pubDateinDateType = new Date(article.pubDate);
-        article.pubDate = pubDateinDateType;
-        if (article.link && article.title && article.source && article.content && article.imageUrl) {
-          await processArticle(article);
-        } else {
-          console.warn(`Skipping invalid article: ${JSON.stringify(article)}`);
-        }
-
-        await new Promise(resolve => setTimeout(() => {
-          resolve("to ensure rate limit not reached by pincone")
-        }, 500))
-      }
-
-      await notifyServerOfNewArticles();
-
-    } catch (parseError) {
-      console.error('Error parsing articles JSON:', parseError);
-    }
-  });
-};
-
-const notifyServerOfNewArticles = async () => {
-  const graphqlEndpoint = BACKEND_URL;
-
-
-  const mutation = `
-    mutation {
-      notifyAddedNews
-    }
-  `;
-
-  try {
-    const res = await fetch(graphqlEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query: mutation })
-    });
-
-    const result = await res.json();
-    console.log("notifyAddedNews response:", result);
-  } catch (err) {
-    console.error("Failed to notify server:", err);
-  }
-};

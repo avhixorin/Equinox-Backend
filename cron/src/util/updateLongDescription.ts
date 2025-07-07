@@ -1,5 +1,4 @@
 import { Readability } from "@mozilla/readability";
-import { Parser } from "json2csv"
 import { createObjectCsvWriter } from "csv-writer"
 import axios from "axios";
 import { JSDOM } from "jsdom";
@@ -16,7 +15,7 @@ const csvWriter = createObjectCsvWriter({
   alwaysQuote: true,
 });
 
-export async function extract(news: { id: string; link: string }) {
+export async function setLongDescription(news: { id: string; link: string }) {
   try {
     const { data: html } = await axios.get(news.link, {
       headers: {
@@ -52,47 +51,9 @@ export async function extract(news: { id: string; link: string }) {
       // console.log(`✅ CSV file created with ${records.title} records.`);
 
     } else {
-      console.warn(`⚠️ No article content found at ${news.link}`);
+      console.warn(`No article content found at ${news.link}`);
     }
   } catch (err: any) {
-    console.warn(`❌ Failed to extract ${news.link}: ${err.message}`);
+    console.warn(`Failed to extract ${news.link}: ${err.message}`);
   }
 }
-
-
-import fs from "fs";
-import csv from "csv-parser";
-
-export function extractLinksFromCsv(csvPath: string): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    const links: string[] = [];
-
-    fs.createReadStream(csvPath)
-      .pipe(csv())
-      .on("data", (row: Record<string, string>) => {
-        if (row.link) {
-          links.push(row.link);
-        }
-      })
-      .on("end", () => {
-        console.log(`✅ Extracted ${links.length} links.`);
-        resolve(links);
-      })
-      .on("error", (err: Error) => {
-        console.error("❌ Error reading CSV:", err.message);
-        reject(err);
-      });
-  });
-}
-
-
-// (async () => {
-//   const newsArticle = await extractLinksFromCsv("yourfile.csv");
-//   for (let i = 0; i < newsArticle.length; i++) {
-//     const feed = newsArticle[i];
-//     await extract({ link: feed, id: `${i}` });
-//     console.log(`✅ Processed ${i + 1}/${newsArticle.length}`);
-//   }
-// })();
-
-

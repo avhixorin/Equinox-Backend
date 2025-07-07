@@ -1,18 +1,18 @@
-import {fetchFnc} from "./scrape/fetch_rss.js"
-import { mainInit, mainInitForYt } from "./embed.js";
+import { scrapeWebsitNews } from "./scrape/websiteNewsRss.js"
+import { processNewsFromFile } from "./embed.js";
 import dotenv from 'dotenv';
-import { fetchYouTubeArticles } from "./scrape/youtube_rss_parse.js";
-import { scrapeTweets } from "./scrape/twitter_rss_parsing.js";
+import { scrapeYouTubeNews } from "./scrape/youtubeNewsRss.js";
+import { scrapeTweets } from "./scrape/twitterNewsRss.js";
 
 dotenv.config()
-
 const init = async () => {
-    console.log("scraping tweets");
-    scrapeTweets();
-    //  await fetchFnc();
-    //  await fetchYouTubeArticles();
-    //  await mainInit();
-    //  await mainInitForYt();
+
+    await scrapeTweets();
+    await scrapeWebsitNews()
+    await scrapeYouTubeNews()
+    await processNewsFromFile("articles.json");
+    await processNewsFromFile("yt-articles.json");
+    await processNewsFromFile("twitter-articles.json");
 }
 
 init().then(() => {

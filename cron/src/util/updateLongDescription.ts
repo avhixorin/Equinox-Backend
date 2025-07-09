@@ -15,9 +15,9 @@ const csvWriter = createObjectCsvWriter({
   alwaysQuote: true,
 });
 
-export async function setLongDescription(news: { id: string; link: string }) {
+export async function setLongDescription(miniNews: { id: string; link: string }) {
   try {
-    const { data: html } = await axios.get(news.link, {
+    const { data: html } = await axios.get(miniNews.link, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Accept-Language": "en-US,en;q=0.9",
@@ -28,7 +28,7 @@ export async function setLongDescription(news: { id: string; link: string }) {
     const originalConsoleError = console.error;
     console.error = () => { };
 
-    const dom = new JSDOM(html, { url: news.link });
+    const dom = new JSDOM(html, { url: miniNews.link });
 
     console.error = originalConsoleError;
 
@@ -42,10 +42,17 @@ export async function setLongDescription(news: { id: string; link: string }) {
         .replace(/(First Published|Last Updated):.+?\n/gi, "")
         .replace(/\s{2,}/g, " ")
 
+
+      //get bias from model endpoint using the cleaned text
+      // const bias = await getBias(cleaned);
+
       await client.miniNews.update({
-        where: { id: news.id },
+        where: { id: miniNews.id },
         data: {
-          longDescription: cleaned,
+          // add to bias array , push to the array not set
+          bias: {
+            push: "left",
+          },
         }
       });
 
@@ -53,9 +60,9 @@ export async function setLongDescription(news: { id: string; link: string }) {
       // console.log(`✅ CSV file created with ${records.title} records.`);
 
     } else {
-      console.warn(`No article content found at ${news.link}`);
+      console.warn(`No article content found at ${miniNews.link}`);
     }
   } catch (err: any) {
-    console.warn(`Failed to extract ${news.link}: ${err.message}`);
+    console.warn(`Failed to extract ${miniNews.link}: ${err.message}`);
   }
 }

@@ -62,6 +62,7 @@ export const scrapeYouTubeNews = async () => {
                     pubDate: published,
                     source: ytChannels[index] || 'Unknown Source',
                     youtube: true,
+                    twitter: false,
                     views
                 };
 

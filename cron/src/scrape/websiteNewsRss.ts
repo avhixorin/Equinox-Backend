@@ -48,6 +48,7 @@ export const scrapeWebsitNews = async () => {
                         source: extractTitle(feed.title),
                         imageUrl: extractImageUrl(item),
                         youtube: false,
+                        twitter: false
 
                     };
                     allArticles.push(article);

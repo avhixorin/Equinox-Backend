@@ -70,7 +70,7 @@ export const scrapeTweets = async () => {
       console.log("Found tweets:", $('.timeline-item').length);
 
       $('.timeline-item').slice(0, 10).each(async (_, el) => {
-        takenCnt++;
+        
         if (takenCnt > tweetLimitFromEachSource) {
           return;
         }
@@ -96,7 +96,6 @@ export const scrapeTweets = async () => {
         }
 
         if (!time || !isToday(time)) {
-          console.log("Skipping tweet due to invalid date:", time);
           return;
         }
 
@@ -108,6 +107,7 @@ export const scrapeTweets = async () => {
           link: twitterUrl,
           pubDate: tweetDate,
           source,
+          youtube: false,
           twitter: true,
         }
 
@@ -117,8 +117,10 @@ export const scrapeTweets = async () => {
         }
 
         allTweets.push(tweetNews);
-        console.log(`Finished scraping ${source}. Total tweets collected: ${allTweets.length}`);
+        takenCnt++;
+
       });
+      console.log(`Finished scraping ${source}. Total tweets collected: ${allTweets.length}`);
 
     }
     catch (err) {

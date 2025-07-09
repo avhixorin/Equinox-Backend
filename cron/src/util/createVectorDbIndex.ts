@@ -1,13 +1,9 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 import dotenv from 'dotenv';
 
-import { categoryDocs, categoryNames } from '../constant.js';
-
 dotenv.config()
-const PINECONE_INDEX_NAME = 'midnews-js'
-const PINECONE_CATEGORY_INDEX = 'categorynews'
+const PINECONE_INDEX_NAME = 'equinoxnews'
 const PINECONE_NAMESPACE = 'news-namespace'
-const PINECONE_CATEGORY_NAMESPACE = 'category-news-namespace'
 
 
 const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
@@ -61,20 +57,7 @@ const init = async (index_name: string, namespace_name: string) => {
         }
 
         const finalIndex = pc.index(index_name).namespace(namespace_name);
-        if (index_name === PINECONE_CATEGORY_INDEX && !exists) {
-
-            for (let i = 0; i < categoryDocs.length; i++) {
-                const recordCategory = {
-                    id: `${i + 1}`,
-                    chunk_text: categoryDocs[i],
-                    category: categoryNames[i],
-                };
-
-                await finalIndex.upsertRecords([recordCategory]);
-            }
-            return finalIndex;
-        }
-        else return finalIndex
+        return finalIndex
 
 
     } catch (error) {
@@ -85,11 +68,5 @@ const init = async (index_name: string, namespace_name: string) => {
 
 
 const indexPromise = init(PINECONE_INDEX_NAME, PINECONE_NAMESPACE);
-const categoryIndexPromise = init(PINECONE_CATEGORY_INDEX, PINECONE_CATEGORY_NAMESPACE)
 
-process.on('SIGINT', () => {
-    console.log('Shutting down Pinecone client...');
-    process.exit(0);
-});
-
-export { indexPromise as index, categoryIndexPromise as categoryIndex };
+export { indexPromise };

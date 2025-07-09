@@ -4,37 +4,35 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("TEST_DATABASE_URL")
 }
 
 model News {
   id        String     @id @default(uuid())
-  category  String[]
   childNews MiniNews[]
 }
 
 model MiniNews {
-  id              String                   @id @default(uuid())
-  title           String
-  link            String                   @unique(map: "unique_link_constraint")
-  content         String?
-  pubDate         DateTime
-  source          String?
-  longDescription String                   @default("")
-  youtube         Boolean                  @default(false)
-  imageUrl        String?
-  newsId          String
-  category        String[]
-  score           Decimal                  @default(0.37)
-  search_vector   Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, ((COALESCE(title, ''::text) || ' '::text) || COALESCE(content, ''::text)))"))
-  bookmarkedBy    Bookmark[]
-  news            News                     @relation(fields: [newsId], references: [id])
-  timelinedBy     Timeline[]
-  ytViews         Int                      @default(0)
-  twitter         Boolean                  @default(false)
+  id           String     @id @default(uuid())
+  title        String
+  links        String[]
+  content      String?
+  pubDate      DateTime
+  sources       String[]
+  bias         String[]
+  youtube      Boolean    @default(false)
+  imageUrl     String?
+  newsId       String
+  category     String
+  score        Decimal    @default(0.37)
+  // search_vector   Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, ((COALESCE(title, ''::text) || ' '::text) || COALESCE(content, ''::text)))"))
+  bookmarkedBy Bookmark[]
+  news         News       @relation(fields: [newsId], references: [id])
+  timelinedBy  Timeline[]
+  ytViews      Int        @default(0)
+  twitter      Boolean    @default(false)
 
-
-  @@index([search_vector], map: "search_vector_idx", type: Gin)
+  // @@index([search_vector], map: "search_vector_idx", type: Gin)
 }
 
 model User {

@@ -35,7 +35,7 @@ export class NewsService {
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-        SELECT id, title, content, score, category, "newsId", "pubDate", link, source, "imageUrl"
+        SELECT id, title, content, score, category, "newsId", "pubDate", links, sources, "imageUrl"
         FROM "MiniNews"
         WHERE search_vector @@ plainto_tsquery('english', $1)
         AND youtube = false
@@ -94,9 +94,7 @@ export class NewsService {
                     gte: startOfDay,
                     lte: endOfDay,
                 },
-                category: {
-                    has: category
-                }
+                category
             },
             orderBy: {
                 pubDate: 'desc'
@@ -142,9 +140,7 @@ export class NewsService {
                 where: {
                     youtube: false,
                     twitter: false,
-                    category: {
-                        has: category
-                    }
+                    category
                 },
                 skip: offset,
                 take: limit,
@@ -153,7 +149,7 @@ export class NewsService {
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-        SELECT id, title, content, score, youtube, category, "newsId", "pubDate", link, source, "imageUrl"
+        SELECT id, title, content, score, youtube, category, "newsId", "pubDate", links, sources, "imageUrl"
         FROM "MiniNews"
         WHERE category = $2
           AND youtube = false
@@ -247,7 +243,7 @@ export class NewsService {
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-            SELECT id, title, content, score, youtube, category, "newsId", "pubDate", link, source, "imageUrl"
+            SELECT id, title, content, score, youtube, category, "newsId", "pubDate", links, sources, "imageUrl"
             FROM "MiniNews"
             WHERE "newsId" = $2
             AND youtube = false

@@ -1,10 +1,12 @@
-import { index } from "./util/createVectorDbIndex.js";
+import { indexPromise } from "./util/createVectorDbIndex.js";
 import { CohereClient } from "cohere-ai";
-import { readFile } from 'fs'
+import { promises } from 'fs'
 import dotenv from 'dotenv';
 import { notifyServerOfNewArticles } from "./util/notifyServer.js";
-import { handleNewArticle, handleRelatedArticle } from "./util/handleArticle.js";
-import { Article, CATEGORY_THRESHOLD, categoryDocs, categoryNames, COHERE_DELAY_MS, SIMILARITY_THRESHOLD } from "./constant.js";
+import { handleArticle } from "./timeline/handleArticle.js";
+import { Article, DELAY_MS, MatchType, ResultJson, } from "./constant.js";
+import { getBestMatch } from "./timeline/getRelatedArticles.js";
+import { getCategory } from "./util/getCategory.js";
 
 dotenv.config()
 
@@ -29,14 +31,17 @@ const cohere = new CohereClient({
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const processArticle = async (article: Article) => {
-  console.log(`\n\n[+] Processing article: ${article.title}`);
+  console.log(`\n[+] Processing article: ${article.title}`);
+  let matchType: MatchType | null = null;
+  let relatedId = ""
+  let queryText = `${article.title}`;
+  const index = await indexPromise
+
+  if (article.content)
+    queryText += `${article.content}`;
 
   try {
-    let queryText = `${article.title}`;
-    if (article.content)
-      queryText += `${article.content}`;
-
-    const topNewsResults = await (await index).searchRecords({
+    const topNewsResults = await index.searchRecords({
       query: { topK: 10, inputs: { text: queryText } },
     });
 
@@ -45,130 +50,130 @@ export const processArticle = async (article: Article) => {
     );
     const topNewsLinks = topNewsResults.result.hits.map(hit => hit._id);
 
-    await sleep(COHERE_DELAY_MS);
-    let isNew = true, relatedScore = 0, relatedLink = "";
+    await sleep(DELAY_MS);
     if (topNewsChunks.length === 0) {
-      console.warn("No similar news found for this article.");
+      matchType = MatchType.UNRELATED;
+      console.warn("--No similar news found for this article in vector DB, treating as new article.");
     }
     else {
-      const rerankRelated = await cohere.rerank({
-        query: queryText,
-        documents: topNewsChunks,
-        model: 'rerank-multilingual-v3.0',
-        topN: 1
+
+      const resultJson: ResultJson = await getBestMatch({
+        processingNews: {
+          title: article.title,
+          content: article.content || "",
+          pubDate: article.pubDate.toISOString(),
+          id: article.link
+
+        }, newsArticleInDB: topNewsChunks.map((chunk, index) => ({
+          id: topNewsLinks[index],
+          title: chunk,
+          content: "",
+          pubDate: ""
+        }))
       });
 
-      relatedScore = rerankRelated.results[0]?.relevanceScore || 0;
-      isNew = relatedScore < SIMILARITY_THRESHOLD;
-      const relatedIndex = rerankRelated.results[0]?.index ?? 0;
-      relatedLink = topNewsLinks[relatedIndex];
-    }
-
-    if (isNew && article.youtube || isNew && article.twitter) {
-      console.log("skipping this youtube videos since it is not related to any website news feeds!")
-      return;
-    }
-
-    console.log(`isNew: ${isNew}, score: ${relatedScore}, link: ${relatedLink}`);
-
-    await sleep(COHERE_DELAY_MS);
-    const rerankCategory = await cohere.rerank({
-      query: queryText,
-      documents: categoryDocs,
-      topN: 1
-    });
-
-    const categories = [];
-
-    for (let i = 0; i < rerankCategory.results.length; i++) {
-      const categoryDrv = rerankCategory.results[i]?.index
-      let categoryDerived = "Others";
-      if (categoryDrv || categoryDrv == 0) {
-        categoryDerived = categoryNames[categoryDrv];
+      console.log("Best match result:", resultJson);
+      switch (resultJson.matchType) {
+        case MatchType.UNRELATED:
+          matchType = MatchType.UNRELATED;
+          break;
+        case MatchType.TIMELINE:
+          matchType = MatchType.TIMELINE;
+          break;
+        case MatchType.SAME_EVENT:
+          matchType = MatchType.SAME_EVENT;
+          break;
       }
-      console.log("result: ", rerankCategory.results[0]);
-
-      const categoryScore = rerankCategory.results[0]?.relevanceScore || 0;
-      const finalCategory = categoryScore > CATEGORY_THRESHOLD ? String(categoryDerived) : "Others";
-      console.log('category derived:', finalCategory, 'with score:', categoryScore);
-      if (finalCategory !== "Others") {
-        categories.push(finalCategory);
-      }
-      else break;
+      relatedId = resultJson.id;
     }
 
-    if (categories.length === 0) categories.push("Others");
-
-    console.log('all categories of this news:', categories);
-    for (const category of categories) {
-      console.log(`Category: ${category}`);
-    }
-
-    if (isNew)
-      handleNewArticle(article, categories)
-    else
-      handleRelatedArticle(article, categories, relatedLink, relatedScore);
-
-    await (await index).upsertRecords([{
-      id: article.link,
-      chunk_text: queryText,
-      category: article.source || "",
-    }]);
-
-    console.log(`Processed: ${article.title}`);
-  } catch (err) {
-    console.error(`Failed to process article: ${article.title}`, err);
   }
-};
+  catch (error) {
+    console.error(`---Error during article matching: ${error}`);
+    return;
+  }
+
+  if (!matchType) {
+    console.warn(`---Unknown match type/invalid related id skipping article processing.`);
+    return;
+  }
+
+  if (matchType === MatchType.UNRELATED && (article.youtube || article.twitter)) {
+    console.log("--Skipping this unrelated youtube/twitter news")
+    return;
+  }
+
+  //figure out category
+  const category = await getCategory({ title: article.title, content: article.content || "" })
+  console.log(`MatchType: ${matchType}\nCategory: ${category}`);
+  const miniNewsId = await handleArticle(article, category , MatchType.UNRELATED, relatedId)
+
+  if (!miniNewsId) {
+    console.warn(`---Skipping processing of article due to error in storing it in DB.`);
+    return;
+  }
+
+  await index.upsertRecords([{
+    id: miniNewsId,
+    chunk_text: queryText,
+  }]);
+
+  await sleep(DELAY_MS);
+
+  await index.update({
+    id: miniNewsId,
+    metadata: {}
+  });
+
+  console.log(`Processed: ${article.title} ${article.link}`);
+}
 
 export const processNewsFromFile = async (jsonName: string) => {
   const articlePath = mode === "development" ? `./${jsonName}` : `./cron/${jsonName}`;
-  readFile(articlePath, 'utf8', async (err, data) => {
-    if (err) {
-      console.error('Error reading articles file:', err);
-      return;
-    }
-    try {
-      const articles: Article[] = JSON.parse(data);
-      console.log('Articles loaded successfully:', articles.length);
+  try {
+    const data = await promises.readFile(articlePath, 'utf8')
+    const articles: Article[] = JSON.parse(data);
+    console.log('Articles loaded successfully:', articles.length);
 
-      for (let i = 0; i < articles.length; i++) {
-        const article = articles[i];
-        const pubDateinDateType = new Date(article.pubDate);
-        article.pubDate = pubDateinDateType;
+    for (let i = 0; i < articles.length; i++) {
+      const article = articles[i];
+      const pubDateinDateType = new Date(article.pubDate);
+      article.pubDate = pubDateinDateType;
 
-        let canWeProcessArticle = false;
-        switch (jsonName) {
-          case "articles.json":
-            canWeProcessArticle = article.link && article.title && article.source && article.content && article.imageUrl ? true : false
-            break;
+      let canWeProcessArticle = false;
+      switch (jsonName) {
+        case "articles.json":
+          canWeProcessArticle = article.link && article.title && article.source && article.content && article.imageUrl ? true : false
+          break;
 
-          case "yt-articles.json":
-            canWeProcessArticle = article.link && article.title && article.source && article.content && article.imageUrl ? true : false
-            break;
+        case "yt-articles.json":
+          canWeProcessArticle = article.link && article.title && article.source && article.content && article.imageUrl ? true : false
+          break;
 
-          case "twitter-articles.json":
-            canWeProcessArticle = article.link && article.title && article.source ? true : false
-            break;
+        case "twitter-articles.json":
+          canWeProcessArticle = article.link && article.title && article.source ? true : false
+          break;
 
-        }
+      }
+      try {
         if (canWeProcessArticle) {
           await processArticle(article);
         } else {
-          console.warn(`Skipping processing of article due to missing required fields.`);
+          console.warn(`---Skipping processing of article due to missing required fields.`);
         }
+      } catch (error) {
+        console.error(`Error processing article ${article.title}: ${article.link}`, error);
 
-        await new Promise(resolve => setTimeout(() => {
-          resolve("to ensure rate limit not reached by pincone")
-        }, 500))
       }
 
-      await notifyServerOfNewArticles(BACKEND_URL);
-
-    } catch (parseError) {
-      console.error('Error parsing articles JSON:', parseError);
+      await sleep(DELAY_MS);
     }
-  });
+
+    await notifyServerOfNewArticles(BACKEND_URL);
+
+  } catch (error) {
+    console.error(`Error reading file ${articlePath}:`, error);
+  }
 };
 
 

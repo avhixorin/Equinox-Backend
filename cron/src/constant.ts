@@ -39,7 +39,7 @@ export interface Article {
 export const systemPromptForCategory = "You are a highly reliable and context-aware news classification model"
 export const systemPrompt = "You are a highly capable news intelligence model. Your job is to identify and group semantically and contextually related news articles based on real-world event similarity. Only return raw JSON."
 
-export const DELAY_MS = 1000;
+export const DELAY_MS = 10000;
 export const SIMILARITY_THRESHOLD = 0.40;
 export const CATEGORY_THRESHOLD = 0.025;
 
@@ -209,7 +209,6 @@ export const categoryNames = [
     "Science",
     "Technology",
     "Crime",
-    "Accidents",
     "Entertainment",
     "Environment",
     "Education",

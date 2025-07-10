@@ -9,7 +9,11 @@ import { finalLog } from "./util/logsForDebugging.js";
 dotenv.config()
 const init = async () => {
     console.log("setting index in vector DB...");
-    await new Promise(resolve => setTimeout(resolve, 5000)); 
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    await scrapeWebsitNews();
+    await scrapeYouTubeNews();
+    await scrapeTweets();
     await processNewsFromFile("articles.json");
     console.log("Finished articles.json");
 

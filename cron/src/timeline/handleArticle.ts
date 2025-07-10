@@ -66,6 +66,8 @@ const handleTimelineArticle = async (
 
     try {
         const miniNewsId = await createMiniNews(article, categories, relevantArticle.newsId);
+
+        console.log("added timeline miniNewsId:", miniNewsId);
         console.error = consoleError;
         return miniNewsId;
 
@@ -106,6 +108,9 @@ const handleSameEventArticle = async (
             }
         });
 
+
+        console.log("Updated existing article with new link, all links are:", miniNews.links, "\n newsid:", miniNews.newsId);
+
         if (article.twitter) TwitterNewsAddedInDB();
         else if (article.youtube) YoutubeNewsAddedInDB();
         else WebsiteNewsAddedInDB();
@@ -120,7 +125,6 @@ const handleSameEventArticle = async (
         return null;
     }
 }
-
 
 
 export const handleArticle = async (article: Article, category: string, matchType: MatchType, relatedId: string) => {
@@ -141,6 +145,22 @@ export const handleArticle = async (article: Article, category: string, matchTyp
 
 
 
+export const getMiniNewsById = async (id: string) => {
+    let miniNews = await prisma.miniNews.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            title: true,
+            content: true,
+            pubDate: true,
+        }
+    });
+
+    if (!miniNews) {
+        console.warn(`MiniNews with ID ${id} not found.`);
+        return null;
+    }
 
 
-
+    return miniNews;
+}

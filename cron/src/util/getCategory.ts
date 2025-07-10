@@ -23,18 +23,17 @@ export async function getCategory(processingNews: newsDataForCategory): Promise<
         model: "shivaay",
         messages: [
             {
-                role: "system",
-                content: systemPromptForCategory
-            },
-            {
                 role: "user",
                 content: userPrompt
             }
         ]
     });
 
-    const raw = completion.choices[0]?.message?.content || "";
+    let raw = completion.choices[0]?.message?.content || "";
     console.log("Raw response from AI:", raw);
+    raw = raw.replace(/^```json\s*/i, '') // remove ```json at the start (case-insensitive)
+        .replace(/^```\s*/i, '')     // or plain ```
+        .replace(/\s*```$/, '');
     const index = Number(raw.trim());
     if (isNaN(index) || index < 0 || index >= categoryNames.length) {
         console.warn("Invalid index, defaulting to 'Others'.");

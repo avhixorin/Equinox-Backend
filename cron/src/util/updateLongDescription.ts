@@ -57,7 +57,7 @@ export async function setLongDescription(miniNews: { id: string; link: string })
       });
 
       // await csvWriter.writeRecords([records]);
-      // console.log(`✅ CSV file created with ${records.title} records.`);
+      // console.log(`CSV file created with ${records.title} records.`);
 
     } else {
       console.warn(`No article content found at ${miniNews.link}`);

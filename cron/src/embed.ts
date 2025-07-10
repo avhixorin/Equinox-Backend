@@ -3,8 +3,8 @@ import { CohereClient } from "cohere-ai";
 import { promises } from 'fs'
 import dotenv from 'dotenv';
 import { notifyServerOfNewArticles } from "./util/notifyServer.js";
-import { handleArticle } from "./timeline/handleArticle.js";
-import { Article, DELAY_MS, MatchType, ResultJson, } from "./constant.js";
+import { getMiniNewsById, handleArticle } from "./timeline/handleArticle.js";
+import { Article, DELAY_MS, MatchType, newsDataForAi, ResultJson, } from "./constant.js";
 import { getBestMatch } from "./timeline/getRelatedArticles.js";
 import { getCategory } from "./util/getCategory.js";
 
@@ -15,7 +15,7 @@ const BACKEND_URL = process.env.BACKEND_GRAPHQL_URL;
 const mode = process.env.MODE || "development";
 
 if (!BACKEND_URL) {
-  console.error("Missing required environment variables: BACKEND_GRAPHQL_URL");
+  console.log("Missing required environment variables: BACKEND_GRAPHQL_URL");
   process.exit(1);
 }
 
@@ -41,19 +41,33 @@ export const processArticle = async (article: Article) => {
     queryText += `${article.content}`;
 
   try {
+    console.log(`--Searching for similar articles in vector DB with query: ${queryText}`);
     const topNewsResults = await index.searchRecords({
       query: { topK: 10, inputs: { text: queryText } },
     });
 
-    const topNewsChunks = topNewsResults.result.hits.map(
-      hit => (hit.fields as { chunk_text?: string })?.chunk_text || ""
-    );
-    const topNewsLinks = topNewsResults.result.hits.map(hit => hit._id);
+    const topNewsId = topNewsResults.result.hits.map(hit => hit._id);
+    const topNewsChunks: newsDataForAi[] = []
+    for (const id of topNewsId) {
+      const miniNews = await getMiniNewsById(id);
+      if (miniNews) {
+        topNewsChunks.push({
+          id: miniNews.id,
+          title: miniNews.title,
+          content: miniNews.content ?? "",
+          pubDate: miniNews.pubDate.toISOString()
+        });
+      }
+
+    }
+
 
     await sleep(DELAY_MS);
+
+    console.log(`--Found ${topNewsChunks.length} similar articles in vector DB.`);
     if (topNewsChunks.length === 0) {
       matchType = MatchType.UNRELATED;
-      console.warn("--No similar news found for this article in vector DB, treating as new article.");
+      console.log("--No similar news found for this article in vector DB, treating as new article.");
     }
     else {
 
@@ -64,12 +78,7 @@ export const processArticle = async (article: Article) => {
           pubDate: article.pubDate.toISOString(),
           id: article.link
 
-        }, newsArticleInDB: topNewsChunks.map((chunk, index) => ({
-          id: topNewsLinks[index],
-          title: chunk,
-          content: "",
-          pubDate: ""
-        }))
+        }, newsArticleInDB: topNewsChunks
       });
 
       console.log("Best match result:", resultJson);
@@ -89,12 +98,12 @@ export const processArticle = async (article: Article) => {
 
   }
   catch (error) {
-    console.error(`---Error during article matching: ${error}`);
+    console.log(`---Error during article matching: ${error}`);
     return;
   }
 
   if (!matchType) {
-    console.warn(`---Unknown match type/invalid related id skipping article processing.`);
+    console.log(`---Unknown match type/invalid related id skipping article processing.`);
     return;
   }
 
@@ -103,13 +112,13 @@ export const processArticle = async (article: Article) => {
     return;
   }
 
-  //figure out category
+
   const category = await getCategory({ title: article.title, content: article.content || "" })
   console.log(`MatchType: ${matchType}\nCategory: ${category}`);
-  const miniNewsId = await handleArticle(article, category , MatchType.UNRELATED, relatedId)
+  const miniNewsId = await handleArticle(article, category, matchType, relatedId)
 
   if (!miniNewsId) {
-    console.warn(`---Skipping processing of article due to error in storing it in DB.`);
+    console.log(`---Skipping processing of article due to error in storing it in DB.`);
     return;
   }
 
@@ -120,10 +129,10 @@ export const processArticle = async (article: Article) => {
 
   await sleep(DELAY_MS);
 
-  await index.update({
-    id: miniNewsId,
-    metadata: {}
-  });
+  // await index.update({
+  //   id: miniNewsId,
+  //   metadata: {}
+  // }); // it didn't worked
 
   console.log(`Processed: ${article.title} ${article.link}`);
 }
@@ -157,22 +166,23 @@ export const processNewsFromFile = async (jsonName: string) => {
       }
       try {
         if (canWeProcessArticle) {
+          await sleep(DELAY_MS);
           await processArticle(article);
         } else {
-          console.warn(`---Skipping processing of article due to missing required fields.`);
+          console.log(`---Skipping processing of article due to missing required fields.`);
         }
       } catch (error) {
-        console.error(`Error processing article ${article.title}: ${article.link}`, error);
+        console.log(`Error processing article ${article.title}: ${article.link}`, error);
 
       }
 
-      await sleep(DELAY_MS);
+
     }
 
     await notifyServerOfNewArticles(BACKEND_URL);
 
   } catch (error) {
-    console.error(`Error reading file ${articlePath}:`, error);
+    console.log(`Error reading file ${articlePath}:`, error);
   }
 };
 

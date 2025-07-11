@@ -50,7 +50,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BACKEND_GRAPHQL_URL: ${{ secrets.BACKEND_GRAPHQL_URL }}
           MODE: ${ secrets.MODE }
-          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          SHIVAAY_API_KEY: ${{ secrets.SHIVAAY_API_KEY }}
         run: node cron/dist/index.js
 
      

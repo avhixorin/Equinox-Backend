@@ -1,6 +1,6 @@
 
 import OpenAI from 'openai';
-import { categoryNames, newsDataForAi, newsDataForCategory, systemPromptForCategory } from '../constant.js';
+import { categoryNames, newsDataForCategory } from '../constant.js';
 import dotenv from 'dotenv';
 import { getUserPromptForCategory } from '../prompts/promptForCategory.js';
 
@@ -31,8 +31,8 @@ export async function getCategory(processingNews: newsDataForCategory): Promise<
 
     let raw = completion.choices[0]?.message?.content || "";
     console.log("Raw response from AI:", raw);
-    raw = raw.replace(/^```json\s*/i, '') // remove ```json at the start (case-insensitive)
-        .replace(/^```\s*/i, '')     // or plain ```
+    raw = raw.replace(/^```json\s*/i, '') 
+        .replace(/^```\s*/i, '')     
         .replace(/\s*```$/, '');
     const index = Number(raw.trim());
     if (isNaN(index) || index < 0 || index >= categoryNames.length) {

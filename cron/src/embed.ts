@@ -1,5 +1,4 @@
 import { indexPromise } from "./util/createVectorDbIndex.js";
-import { CohereClient } from "cohere-ai";
 import { promises } from 'fs'
 import dotenv from 'dotenv';
 import { notifyServerOfNewArticles } from "./util/notifyServer.js";
@@ -10,7 +9,6 @@ import { getCategory } from "./util/getCategory.js";
 
 dotenv.config()
 
-const COHERE_API_KEY = process.env.COHERE_API_KEY;
 const BACKEND_URL = process.env.BACKEND_GRAPHQL_URL;
 const mode = process.env.MODE || "development";
 
@@ -18,14 +16,6 @@ if (!BACKEND_URL) {
   console.log("Missing required environment variables: BACKEND_GRAPHQL_URL");
   process.exit(1);
 }
-
-if (!COHERE_API_KEY) {
-  throw new Error("COHERE_API_KEY is missing from environment variables.");
-}
-
-const cohere = new CohereClient({
-  token: process.env.COHERE_API_KEY!,
-});
 
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -175,10 +165,7 @@ export const processNewsFromFile = async (jsonName: string) => {
         console.log(`Error processing article ${article.title}: ${article.link}`, error);
 
       }
-
-
     }
-
     await notifyServerOfNewArticles(BACKEND_URL);
 
   } catch (error) {

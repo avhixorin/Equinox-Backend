@@ -1,6 +1,6 @@
 export const tweetLimitFromEachSource = 10;
 export const ytLimitFromEachSource = 10;
-export const websiteLimitFromEachSource = 10;
+export const websiteLimitFromEachSource = 15;
 
 export enum MatchType {
     UNRELATED = "unrelated",
@@ -40,8 +40,7 @@ export const systemPromptForCategory = "You are a highly reliable and context-aw
 export const systemPrompt = "You are a highly capable news intelligence model. Your job is to identify and group semantically and contextually related news articles based on real-world event similarity. Only return raw JSON."
 
 export const DELAY_MS = 10000;
-export const SIMILARITY_THRESHOLD = 0.40;
-export const CATEGORY_THRESHOLD = 0.025;
+export const SIMILARITY_THRESHOLD = 0.15;
 
 export const websiteRssFeeds = [
     "https://www.thehindu.com/news/national/feeder/default.rss",
@@ -100,6 +99,7 @@ export const websiteSourceMapForBetterName: Record<string, string> = {
 };
 
 export const ytChannelIdMap = {
+    "BBC India": "UCF4QKhPMP1JybbkIJzIayww",
     "Aaj Tak": "UCt4t-jeY85JegMlZ-E5UWtA",
     "ABP News": "UCRWFSbif-RFENbBrSiez1DA",
     "India TV": "UCttspZesZIDEwwpVIgoZtWQ",
@@ -133,10 +133,39 @@ export const ytChannelIdMap = {
     "Vox": "UCLXo7UDZvByw2ixzpQCufnA",
     "VICE News": "UCZaT_X_mc0BI-djXOlfhqWQ",
     "Associated Press": "UC52X5wxOL_s5yw0dQk7NtgA",
-    "Piers Morgan Uncensored": "UCatt7TBjfBkiJWx8khav_Gg"
+    "Piers Morgan Uncensored": "UCatt7TBjfBkiJWx8khav_Gg",
+    "Jansatta News": "UCICJyUwBYgUOE35F8klEoYw",
+    "Republic TV": "UCwqusr8YDwM‑3mEYTDeJHzw",
+    "News9 Live": "UCRK4FDIkUyslEAUdyRDdCtQ",
+    "ET Now": "UCI_mwTKUhicNzFrhm33MzBQ",
+    "Mirror Now": "UCWCEYVwSqr7Epo6sSCfUgiw",
+    "DD India": "UCGDQNvybfDDeGTf4GtigXaw",
+    "Economic Times": "UCJFOER35ggIWwsXh2ZDnqyg",
+    "Business Today": "UCaPHWiExfUWaKsUtENLCv5w",
+    "NDTV Profit": "UC3uJIdRFTGgLWrUziaHbzrg",
+    "Firstpost": "UCz8QaiQxApLq8sLNcszYyJw",
+    "The Quint": "UCSaf-7p3J_N-02p7jHzm5tA",
+    "Scroll.in": "UCl8zB2LZOiLLV0jYUMpTEgA",
+    "The News Minute": "UCspQie3i29iIFbCgfGisO9Q",
+    "The Wire Live": "UChWtJey46brNr7qHQpN6KLQ",
 }
 
 export const ytChannels = [
+    "The Wire Live",
+    "The News Minute",
+    "Scroll.in",
+    "The Quint",
+    "Firstpost",
+    "NDTV Profit",
+    "Business Today",
+    "Economic Times",
+    "DD India",
+    "BBC India",
+    "Mirror Now",
+    "ET Now",
+    "Republic TV",
+    "News9 Live",
+    "Jansatta News",
     "Aaj Tak",
     "ABP News",
     "India TV",
@@ -174,6 +203,13 @@ export const ytChannels = [
 ];
 
 export const TwitterChannels = [
+    "CNNnews18",
+    "AmarUjalaNews",
+    "dna",
+    "thewire_in",
+    "firstpost",
+    "timesofindia",
+    "IndianExpress",
     "aajtak",
     "bbc",
     "AJEnglish",
@@ -197,6 +233,7 @@ export const TwitterChannels = [
     "the_hindu",
     "WIONews",
     "JamunaTV",
+    "storifynews"
 ];
 
 export const categoryNames = [
@@ -218,5 +255,6 @@ export const categoryNames = [
 ];
 
 
-
-
+console.log("website rss feeds:", websiteRssFeeds.length);
+console.log("youtube channels:", ytChannels.length);
+console.log("twitter channels:", TwitterChannels.length);

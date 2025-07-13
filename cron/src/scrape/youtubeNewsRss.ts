@@ -66,9 +66,11 @@ export const scrapeYouTubeNews = async () => {
                     views
                 };
 
-                allVideos.push(article);
-                limit--;
-                allLinks.push(article.link);
+                if (article.title && article.link && article.source && article.content && article.imageUrl) {
+                    allVideos.push(article);
+                    allLinks.push(link);
+                    limit--;
+                }
 
             }
         } catch (err) {

@@ -70,7 +70,7 @@ export const scrapeTweets = async () => {
       console.log("Found tweets:", $('.timeline-item').length);
 
       $('.timeline-item').slice(0, 10).each(async (_, el) => {
-        
+
         if (takenCnt > tweetLimitFromEachSource) {
           return;
         }
@@ -116,8 +116,10 @@ export const scrapeTweets = async () => {
           return;
         }
 
-        allTweets.push(tweetNews);
-        takenCnt++;
+        if (tweetNews.title && tweetNews.link && tweetNews.source) {
+          allTweets.push(tweetNews);
+          takenCnt++;
+        }
 
       });
       console.log(`Finished scraping ${source}. Total tweets collected: ${allTweets.length}`);

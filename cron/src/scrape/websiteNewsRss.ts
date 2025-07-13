@@ -51,9 +51,11 @@ export const scrapeWebsitNews = async () => {
                         twitter: false
 
                     };
-                    allArticles.push(article);
-                    count++;
-                    articleTaken++;
+                    if (article.title && article.link && article.source && article.content && article.imageUrl) {
+                        allArticles.push(article);
+                        count++;
+                        articleTaken++;
+                    }
                     if (articleTaken >= ytLimitFromEachSource) break;
                 }
             }

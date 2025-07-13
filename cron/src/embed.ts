@@ -3,7 +3,7 @@ import { promises } from 'fs'
 import dotenv from 'dotenv';
 import { notifyServerOfNewArticles } from "./util/notifyServer.js";
 import { getMiniNewsById, handleArticle } from "./timeline/handleArticle.js";
-import { Article, DELAY_MS, MatchType, newsDataForAi, ResultJson, } from "./constant.js";
+import { Article, DELAY_MS, MatchType, newsDataForAi, ResultJson, SIMILARITY_THRESHOLD, } from "./constant.js";
 import { getBestMatch } from "./timeline/getRelatedArticles.js";
 import { getCategory } from "./util/getCategory.js";
 
@@ -36,7 +36,14 @@ export const processArticle = async (article: Article) => {
       query: { topK: 10, inputs: { text: queryText } },
     });
 
-    const topNewsId = topNewsResults.result.hits.map(hit => hit._id);
+    topNewsResults.result.hits[0]._score
+
+    const topNewsId = [];;
+    for (const hit of topNewsResults.result.hits) {
+      if (hit._score > SIMILARITY_THRESHOLD) {
+        topNewsId.push(hit._id);
+      }
+    }
     const topNewsChunks: newsDataForAi[] = []
     for (const id of topNewsId) {
       const miniNews = await getMiniNewsById(id);

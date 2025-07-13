@@ -3,7 +3,7 @@ name: run-fetch_process-article
 on:
   workflow_dispatch:
   schedule:
-    - cron: "41 12 * * *" # 6:11 PM IST
+    - cron: "30 7 * * *" # 1:00 PM IST
 
 jobs:
   embed-script:

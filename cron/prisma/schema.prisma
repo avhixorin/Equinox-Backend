@@ -25,14 +25,11 @@ model MiniNews {
   newsId       String
   category     String
   score        Decimal    @default(0.37)
-  // search_vector   Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, ((COALESCE(title, ''::text) || ' '::text) || COALESCE(content, ''::text)))"))
   bookmarkedBy Bookmark[]
   news         News       @relation(fields: [newsId], references: [id])
   timelinedBy  Timeline[]
   ytViews      Int        @default(0)
   twitter      Boolean    @default(false)
-
-  // @@index([search_vector], map: "search_vector_idx", type: Gin)
 }
 
 model User {

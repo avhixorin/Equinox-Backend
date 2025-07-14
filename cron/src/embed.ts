@@ -8,6 +8,11 @@ import { getBestMatch } from "./timeline/getRelatedArticles.js";
 import { getCategory } from "./util/getCategory.js";
 
 dotenv.config()
+export let procssingNewsCnt = 0;
+export let newsInDBCnt = 0;
+export let relatedArticlesPromptCnt = 0;
+export let categoryPromptCnt = 0;
+
 
 const BACKEND_URL = process.env.BACKEND_GRAPHQL_URL;
 const mode = process.env.MODE || "development";
@@ -36,8 +41,6 @@ export const processArticle = async (article: Article) => {
       query: { topK: 10, inputs: { text: queryText } },
     });
 
-    topNewsResults.result.hits[0]._score
-
     const topNewsId = [];;
     for (const hit of topNewsResults.result.hits) {
       if (hit._score > SIMILARITY_THRESHOLD) {
@@ -57,8 +60,7 @@ export const processArticle = async (article: Article) => {
       }
 
     }
-
-
+    
     await sleep(DELAY_MS);
 
     console.log(`--Found ${topNewsChunks.length} similar articles in vector DB.`);
@@ -68,6 +70,7 @@ export const processArticle = async (article: Article) => {
     }
     else {
 
+      newsInDBCnt += topNewsChunks.length;
       const resultJson: ResultJson = await getBestMatch({
         processingNews: {
           title: article.title,
@@ -77,6 +80,10 @@ export const processArticle = async (article: Article) => {
 
         }, newsArticleInDB: topNewsChunks
       });
+
+      relatedArticlesPromptCnt++;
+      procssingNewsCnt++;
+
 
       console.log("Best match result:", resultJson);
       switch (resultJson.matchType) {
@@ -111,6 +118,8 @@ export const processArticle = async (article: Article) => {
 
 
   const category = await getCategory({ title: article.title, content: article.content || "" })
+  categoryPromptCnt++, procssingNewsCnt++;
+
   console.log(`MatchType: ${matchType}\nCategory: ${category}`);
   const miniNewsId = await handleArticle(article, category, matchType, relatedId)
 
@@ -126,12 +135,8 @@ export const processArticle = async (article: Article) => {
 
   await sleep(DELAY_MS);
 
-  // await index.update({
-  //   id: miniNewsId,
-  //   metadata: {}
-  // }); // it didn't worked
-
   console.log(`Processed: ${article.title} ${article.link}`);
+
 }
 
 export const processNewsFromFile = async (jsonName: string) => {
@@ -174,6 +179,10 @@ export const processNewsFromFile = async (jsonName: string) => {
       }
     }
     await notifyServerOfNewArticles(BACKEND_URL);
+    console.log(`\n[+] procesing articles cnt ${procssingNewsCnt} `);
+    console.log(`\n[+] news in DB cnt ${newsInDBCnt} `);
+    console.log(`\n[+] related articles prompt cnt ${relatedArticlesPromptCnt} `);
+    console.log(`\n[+] category prompt cnt ${categoryPromptCnt} `);
 
   } catch (error) {
     console.log(`Error reading file ${articlePath}:`, error);

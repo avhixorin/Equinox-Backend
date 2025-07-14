@@ -1,5 +1,4 @@
 import { categoryNames, newsDataForCategory } from "../constant.js";
-
 export const getUserPromptForCategory = (processingNews: newsDataForCategory) => {
   return `
 You are an intelligent and precise news classification model.
@@ -11,25 +10,37 @@ You are given:
 Your task:
 - Carefully read and understand the **main topic** and **overall theme** of the article.
 - Choose the **single most relevant category** from the category array.
-- Return the **index** (0-based) of the best matching category.
+- Return the **index** (number) of the best matching category.
+
+📏 **Important Indexing Rule (READ CAREFULLY)**:
+- The index must be **0-based**.
+- That means: the **first category has index 0**, the second has index 1, and so on.
+- **DO NOT return 1-based index** under any condition. **Index 0 is a valid answer**.
+- If none of the categories are a good fit, return **-1**.
 
 🧠 **Classification Rules**:
-- **Do NOT rely on keywords alone.** Focus on the actual **subject matter**.
-- Base your decision on **what the article is fundamentally about**, not who is mentioned.
-- If an article **mentions a businessperson (e.g., Elon Musk)** but talks about political commentary or crime, it is **not business news**.
-- Do NOT classify based on tone or sentiment. Focus only on **factual content**.
-- If the article does **not clearly fit** any category, return **-1**.
+- Do **NOT rely on keywords alone** — focus on the actual **subject matter** and **what the article is fundamentally about**.
+- Do NOT classify based on **tone or sentiment**.
+- If the article mentions a person (e.g., Elon Musk), **do not assume** it's "Business" unless the core topic is actually business-related.
+- Examples:
+  - Article about a company's earnings → **"Business"**
+  - Article about a businessperson's political rant → **"Politics"** or **"Crime"**
+  - Article about RSS, Ram Mandir, or religious conflict → likely **"Religion"** or **"Politics"**
 
-📌 Examples:
-- An article discussing a company's revenue or product launch → **"Business"**
-- An article about a businessperson’s **social media post targeting a politician** → **"Politics" or "Crime"**
-- An article on **RSS expansion or regional peace** → **"Politics"** or **"Religion"**, not **"Business"**
+🧪 **Indexing Example**:
+If the category list is:
+["Business", "Politics", "Crime", "Religion", "Sports"]
+
+Then:
+- If the best category is "Business", return → **0**
+- If "Religion", return → **3**
+- If none match, return → **-1**
 
 ---
 
-There are ${categoryNames.length} categories.
+There are ${categoryNames.length} categories in total.
 
-Return only the **index (number)**, with **no text or explanation**.
+Return only the **index number** (no text, no explanation, no label).
 
 ---
 

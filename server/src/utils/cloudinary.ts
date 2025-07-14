@@ -11,6 +11,7 @@ const uploadOnCloudinary = async (localFilePath: any) => {
     try {
         if (!localFilePath) return null;
         const response = await cloudinary.uploader.upload(localFilePath, {
+            folder: "equinox",
             resource_type: "auto",
         });
 

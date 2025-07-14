@@ -241,7 +241,6 @@ export const categoryNames = [
     "Politics",
     "Government",
     "Business",
-    "Agriculture",
     "Health",
     "Science",
     "Technology",

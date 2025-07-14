@@ -8,7 +8,7 @@
   You are a classification model that detects the strongest event-level connection between news articles. You will receive one "processingNews" article and an array of articles in "newsArticleInDB".
 
   Classify their relationship using only one of the following three types:
-
+  
   1. "same-event":  
     - Both articles report the **exact same real-world event or decision**.  
     - Surface wording may differ, but the **core incident is the same** (e.g. same court ruling, same press release, same arrest, etc.).

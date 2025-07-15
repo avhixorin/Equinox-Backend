@@ -1,53 +1,69 @@
 import { categoryNames, newsDataForCategory } from "../constant.js";
+
 export const getUserPromptForCategory = (processingNews: newsDataForCategory) => {
+  const indexedCategoryArray = categoryNames
+    .map((name, i) => `  ${i}: "${name}"`)
+    .join(',\n');
+
   return `
 You are an intelligent and precise news classification model.
 
 You are given:
-- A **news article** ("processingNews") containing a **title** and **content**.
-- A **list of predefined categories** in "categoryArray".
+- A **news article** ("processingNews") with a **title** and **content**.
+- A list of predefined categories in "categoryArray", each with its **0-based index**.
 
 Your task:
-- Carefully read and understand the **main topic** and **overall theme** of the article.
-- Choose the **single most relevant category** from the category array.
-- Return the **index** (number) of the best matching category.
-
-📏 **Important Indexing Rule (READ CAREFULLY)**:
-- The index must be **0-based**.
-- That means: the **first category has index 0**, the second has index 1, and so on.
-- **DO NOT return 1-based index** under any condition. **Index 0 is a valid answer**.
-- If none of the categories are a good fit, return **-1**.
-
-🧠 **Classification Rules**:
-- Do **NOT rely on keywords alone** — focus on the actual **subject matter** and **what the article is fundamentally about**.
-- Do NOT classify based on **tone or sentiment**.
-- If the article mentions a person (e.g., Elon Musk), **do not assume** it's "Business" unless the core topic is actually business-related.
-- Examples:
-  - Article about a company's earnings → **"Business"**
-  - Article about a businessperson's political rant → **"Politics"** or **"Crime"**
-  - Article about RSS, Ram Mandir, or religious conflict → likely **"Religion"** or **"Politics"**
-
-🧪 **Indexing Example**:
-If the category list is:
-["Business", "Politics", "Crime", "Religion", "Sports"]
-
-Then:
-- If the best category is "Business", return → **0**
-- If "Religion", return → **3**
-- If none match, return → **-1**
+- Analyze the **main topic** and **core subject** of the article.
+- Select the **most relevant category** by returning its index.
 
 ---
 
-There are ${categoryNames.length} categories in total.
+### Indexing Rules:
+- Index must be **0-based** (first = 0, second = 1, etc.).
+- Do NOT return 1-based index.
+- If the article does NOT clearly fit any category, return **-1**.
 
-Return only the **index number** (no text, no explanation, no label).
+---
+
+### Classification Instructions:
+- Do NOT match based on keywords alone. Understand **context**.
+- Do NOT guess. If unsure, return -1.
+- Only return a valid index if you are clearly confident the article fits a category.
+
+For example:
+- “Last rites by CM” → likely **Politics**, not **Religion**.
+- “Elon Musk talking politics” → **Politics**, not **Business**.
+- “A criminal case involving a monk” → **Crime**, not **Religion**.
+
+---
+
+### Category List:
+[
+${indexedCategoryArray}
+]
+
+---
+
+### Final Response Instructions:
+You MUST respond with **only a single integer on one line**.
+No category name. No explanation. No labels. No formatting.
+
+**Valid answers:**
+\`0\`  
+\`-1\`  
+\`7\`
+
+❗️If you are NOT confident about the match, return **-1**.  
+This is important. Do NOT guess.
 
 ---
 
 Input:
 {
   "processingNews": ${JSON.stringify(processingNews, null, 2)},
-  "categoryArray": ${JSON.stringify(categoryNames)}
+  "categoryArray": [
+${indexedCategoryArray}
+  ]
 }
 `;
 };

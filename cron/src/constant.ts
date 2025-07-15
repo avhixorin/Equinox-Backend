@@ -1,6 +1,6 @@
 export const tweetLimitFromEachSource = 10;
-export const ytLimitFromEachSource = 10;
-export const websiteLimitFromEachSource = 20;
+export const ytLimitFromEachSource = 8;
+export const websiteLimitFromEachSource = 10;
 
 export enum MatchType {
     UNRELATED = "unrelated",

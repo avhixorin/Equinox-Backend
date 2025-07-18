@@ -8,30 +8,36 @@ import dotenv from 'dotenv';
 dotenv.config();
 const mode = process.env.MODE || "development";
 
-
 function cleanTwitterTitle(raw: string, maxLength = 100): string {
   let cleaned = raw
     .replace(/https?:\/\/\S+/g, '')         // Remove URLs
     .replace(/#[^\s#]+/g, '')               // Remove hashtags
     .replace(/@[^\s@]+/g, '')               // Remove mentions
     .replace(/[\n\r]+/g, ' ')               // Newlines to space
-    .replace(/[“”‘’•◆→▲—–•✔️✅❌🚨🔴🔵⬇️⬆️🔥💥⚠️😱😭🤯🤬😡🤔🙄💔❤️🙏🇮🇳]/g, '') // Common junk emojis/symbols
-    .replace(/[\u{1F300}-\u{1F6FF}]/gu, '') // Emojis range
-    .replace(/[^a-zA-Z0-9\u0900-\u097F .,!?\-'"“”‘’()]/g, '') // Remove weird unicode except Hindi
-    .replace(/\s{2,}/g, ' ')                // Extra spaces
-    .replace(/^[.,:;'\-]+/, '')             // Leading junk
-    .replace(/[.,:;'\-]+$/, '')             // Trailing junk
+    .replace(/[“”‘’•◆→▲—–•✔️✅❌🚨🔴🔵⬇️⬆️🔥💥⚠️😱😭🤯🤬😡🤔🙄💔❤️🙏🇮🇳]/g, '') // Common emojis/symbols
+    .replace(/[\u{1F300}-\u{1F6FF}]/gu, '') // Misc emoji unicode
+    .replace(/[^a-zA-Z0-9\u0900-\u097F .,!?\-'"“”‘’()]/g, '') // Allow English, Hindi, common punct
+    .replace(/\s{2,}/g, ' ')                // Collapse multiple spaces
+    .replace(/^[.,:;'\-]+/, '')             // Trim leading junk
+    .replace(/[.,:;'\-]+$/, '')             // Trim trailing junk
     .trim();
 
-
+  // Capitalize if starts with lowercase
   if (/^[a-z]/.test(cleaned)) {
     cleaned = cleaned[0].toUpperCase() + cleaned.slice(1);
   }
 
+  // Reject meaningless titles
+  if (cleaned.length < 15 || /^watch$/i.test(cleaned)) {
+    return '';
+  }
+
+  // Truncate
   return cleaned.length > maxLength
     ? cleaned.slice(0, maxLength).trim() + '...'
     : cleaned;
 }
+
 
 // function constructImageUrl(rawSrc: string
 //   | null | undefined
@@ -75,8 +81,6 @@ export const scrapeTweets = async () => {
           return;
         }
         let content = $(el).find('.tweet-content.media-body').text().trim()
-
-        content = content.split("#")[0].trim()
         content = cleanTwitterTitle(content, 100).trim()
 
         const time = $(el).find('.tweet-date a').attr('title') || '';

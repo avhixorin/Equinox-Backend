@@ -11,17 +11,21 @@ import {
 
 dotenv.config();
 
-if (!process.env.GROQ_API_KEY2) {
-    throw new Error('GROQ_API_KEY2 is missing from environment variables.');
+const groqKeys = process.env?.GROQ_API_KEYS1?.split(',') || [];
+
+if (groqKeys.length === 0) {
+    throw new Error('No GROQ_API_KEYS1 provided in environment variables.');
 }
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY2,
-});
+let workingKeyIndex = 0;
 
 export async function getCategory(processingNews: newsDataForCategory): Promise<string> {
     let userPrompt = getUserPromptForCategory(processingNews)
 
+    const groq = new Groq({
+        apiKey: groqKeys[workingKeyIndex],
+    });
+    console.log("using key number: " + (workingKeyIndex + 1));
     try {
         const completion = await groq.chat.completions.create({
             messages: [
@@ -51,7 +55,7 @@ export async function getCategory(processingNews: newsDataForCategory): Promise<
         }
 
         if (index === -1) {
-            return 'Others'; 
+            return 'Others';
         }
 
         if (index < 0 || index >= categoryNames.length) {
@@ -66,7 +70,14 @@ export async function getCategory(processingNews: newsDataForCategory): Promise<
         console.log(`\n[+] News in DB cnt: ${newsInDBCnt}`);
         console.log(`\n[+] Related articles prompt cnt: ${relatedArticlesPromptCnt}`);
         console.log(`\n[+] Category prompt cnt: ${categoryPromptCnt}`);
-        process.exit(1);
+
+        workingKeyIndex = (workingKeyIndex + 1) % groqKeys.length;
+        if (workingKeyIndex === 0) {
+            console.log('All GROQ API keys exhausted. exiting...');
+            process.exit(1);
+        }
+        console.log("New working key index:", workingKeyIndex);
+        return getCategory(processingNews);
     }
 }
 

@@ -14,6 +14,7 @@ const init = async () => {
     await scrapeWebsitNews();
     await scrapeYouTubeNews();
     await scrapeTweets();
+    // await processNewsFromFile("all_articles.json");
     await processNewsFromFile("articles.json");
     console.log("Finished articles.json");
 

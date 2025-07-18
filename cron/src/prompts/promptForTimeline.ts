@@ -1,41 +1,59 @@
-  import { newsDataForAi } from "../constant.js";
+import { newsDataForAi } from "../constant.js";
 
-  export const getUserPrompt = (
-    processingNews: newsDataForAi,
-    newsArticleInDB: newsDataForAi[]
-  ) => {
-    return `
-  You are a classification model that detects the strongest event-level connection between news articles. You will receive one "processingNews" article and an array of articles in "newsArticleInDB".
+export const getUserPrompt = (
+  processingNews: newsDataForAi,
+  newsArticleInDB: newsDataForAi[]
+) => {
+  return `
+You are given a \"processingNews\" article and an array of previously stored articles called \"newsArticleInDB\".
 
-  Classify their relationship using only one of the following three types:
-  
-  1. "same-event":  
-    - Both articles report the **exact same real-world event or decision**.  
-    - Surface wording may differ, but the **core incident is the same** (e.g. same court ruling, same press release, same arrest, etc.).
+Your job is to compare the \"processingNews\" article with each article in \"newsArticleInDB\" and determine the **single most related article**, if any.
 
-  2. "timeline":  
-    - Articles are **part of the same broader story**, but describe **different events** (e.g. a judgment followed by a political reaction).
+There are three types of relationships you may identify:
 
-  3. "unrelated":  
-    - Articles are not meaningfully connected. Any overlap is superficial (e.g. same state, institution, or person but unrelated news).
+1. \"same-event\": The articles are about the exact same real-world event or announcement, even if the wording is different or sources vary. These are duplicates in substance.
 
-  Rules:
-  - Return only one best match.
-  - If multiple seem close, prefer "same-event".
-  - If nothing matches well, return "unrelated".
-  - Output must be **strictly raw JSON**. No explanation, no extra formatting, no markdown. Just the final object.
+2. \"timeline\": The article is clearly part of the same ongoing story — a cause, consequence, background, follow-up, or reaction. They are not duplicates, but form a narrative chain.
 
-  Output format (strict):
-  {
-    "matchType": "same-event" | "timeline" | "unrelated",
-    "id": "<matching_article_id>" | "none",
-    "title": "<matching_article_title>" | ""
-  }
+3. \"unrelated\": The article has no strong connection to any real-world event or story referenced in the processingNews article.
 
-  Input:
-  {
-    "processingNews": ${JSON.stringify(processingNews, null, 2)},
-    "newsArticleInDB": ${JSON.stringify(newsArticleInDB, null, 2)}
-  }
-  `;
-  };
+---
+
+🧠 Rules:
+- Only consider **event-based, factual connections**.
+- Choose the **single most relevant match**, based on depth of connection and proximity in story.
+- If two options qualify, prefer \"same-event\" over \"timeline\".
+- evacuation, protests, sanctions, political statements, or military action in response to the same event chain should be treated as \"timeline\"
+- Consider pubDate: If one article follows shortly after another and discusses its outcome, classify as \"timeline\".
+- Articles with the same pubDate and overlapping core content are likely \"same-event\".
+
+---
+
+📤 Output Format:
+Return **only JSON** with this exact structure:
+
+If a related article is found:
+{
+  "matchType": "same-event" | "timeline",
+  "id": "<matching_article_id>",
+  "title": "<matching_article_title>"
+}
+
+If no related article is found:
+{
+  "matchType": "unrelated",
+  "id": -1,
+  "title": ""
+}
+
+---
+
+Do not return code, markdown, explanations, thoughts, or steps. Only valid JSON as shown above.
+
+Input:
+{
+  "processingNews": ${JSON.stringify(processingNews, null, 2)},
+  "newsArticleInDB": ${JSON.stringify(newsArticleInDB, null, 2)}
+}
+`;
+};

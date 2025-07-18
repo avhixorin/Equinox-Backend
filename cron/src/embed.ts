@@ -6,6 +6,9 @@ import { getMiniNewsById, handleArticle } from "./timeline/handleArticle.js";
 import { Article, DELAY_MS, MatchType, newsDataForAi, ResultJson, SIMILARITY_THRESHOLD, } from "./constant.js";
 import { getBestMatch } from "./timeline/getRelatedArticles.js";
 import { getCategory } from "./util/getCategory.js";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 dotenv.config()
 export let procssingNewsCnt = 0;
@@ -27,10 +30,34 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const processArticle = async (article: Article) => {
   console.log(`\n[+] Processing article: ${article.title}`);
+
+
+  const alreadyexistNews = await prisma.miniNews.findFirst({
+    where: {
+      title: article.title,
+      links: {
+        has: article.link,
+      },
+      sources: {
+        has: article.source,
+      },
+      pubDate: article.pubDate,
+      content: article.content,
+    }
+  });
+
+  if (alreadyexistNews) {
+    console.log(`---Skipping processing of article as it already exists in DB: ${article.title}`);
+    return;
+  }
+
+
   let matchType: MatchType | null = null;
   let relatedId = ""
   let queryText = `${article.title}`;
   const index = await indexPromise
+
+  console.log("-----article Link---------: ", article.link);
 
   if (article.content)
     queryText += `${article.content}`;
@@ -60,7 +87,7 @@ export const processArticle = async (article: Article) => {
       }
 
     }
-    
+
     await sleep(DELAY_MS);
 
     console.log(`--Found ${topNewsChunks.length} similar articles in vector DB.`);
@@ -112,13 +139,21 @@ export const processArticle = async (article: Article) => {
   }
 
   if (matchType === MatchType.UNRELATED && (article.youtube || article.twitter)) {
-    console.log("--Skipping this unrelated youtube/twitter news")
+    console.log("--Skipping this unrelated news from youtube and twitter")
     return;
   }
 
 
-  const category = await getCategory({ title: article.title, content: article.content || "" })
-  categoryPromptCnt++, procssingNewsCnt++;
+  // if (matchType === MatchType.UNRELATED) {
+  //   console.log("--Skipping this unrelated news")
+  //   return;
+  // }
+
+
+  const category = await getCategory({ content: article.content || "", title: article.title })
+
+  // const category = article.category || "Others";
+  console.log(`Category: ${category}`);
 
   console.log(`MatchType: ${matchType}\nCategory: ${category}`);
   const miniNewsId = await handleArticle(article, category, matchType, relatedId)
@@ -128,12 +163,19 @@ export const processArticle = async (article: Article) => {
     return;
   }
 
-  await index.upsertRecords([{
-    id: miniNewsId,
-    chunk_text: queryText,
-  }]);
+  const fetchResult = await index.fetch([miniNewsId]);
+  const alreadyExists = fetchResult.records && fetchResult.records[miniNewsId];
 
-  await sleep(DELAY_MS);
+  if (!alreadyExists) {
+    await index.upsertRecords([
+      {
+        id: miniNewsId,
+        chunk_text: queryText,
+      }
+    ]);
+
+    await sleep(DELAY_MS);
+  }
 
   console.log(`Processed: ${article.title} ${article.link}`);
 
@@ -155,6 +197,10 @@ export const processNewsFromFile = async (jsonName: string) => {
       switch (jsonName) {
         case "articles.json":
           canWeProcessArticle = article.link && article.title && article.source && article.content && article.imageUrl ? true : false
+          break;
+
+        case "all_articles.json":
+          canWeProcessArticle = article.link && article.title && article.source ? true : false
           break;
 
         case "yt-articles.json":

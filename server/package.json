@@ -2,12 +2,11 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "tsc -b && node dist/index.js",
-    "dev": "tsc-watch --onSuccess \"npm start\"",
-    "prod": "npm install && tsc -b && node dist/index.js"
+    "start": "node dist/index.js",
+    "build": "npm install && npx prisma generate && tsc -b",
+    "gcp-build": "npm run build"
   },
   "keywords": [],
   "author": "",

@@ -41,7 +41,7 @@ export const systemPromptForCategory = "You are a highly reliable and context-aw
 export const systemPrompt = "You are a highly capable news intelligence model. Your job is to identify and group semantically and contextually related news articles based on real-world event similarity. Only return raw JSON."
 
 export const DELAY_MS = 10000;
-export const SIMILARITY_THRESHOLD = 0.15;
+export const SIMILARITY_THRESHOLD = 0.3;
 
 export const websiteRssFeeds = [
     "https://www.thehindu.com/news/national/feeder/default.rss",

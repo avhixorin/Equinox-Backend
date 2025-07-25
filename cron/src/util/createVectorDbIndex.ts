@@ -2,8 +2,8 @@ import { Pinecone } from '@pinecone-database/pinecone';
 import dotenv from 'dotenv';
 
 dotenv.config()
-const PINECONE_INDEX_NAME = 'equinoxnews'
-const PINECONE_NAMESPACE = 'news-namespace'
+export const PINECONE_INDEX_NAME = 'equinoxnews'
+export const PINECONE_NAMESPACE = 'news-namespace'
 
 
 const PINECONE_API_KEY = process.env.PINECONE_API_KEY;

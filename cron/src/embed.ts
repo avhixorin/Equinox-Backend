@@ -31,7 +31,6 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export const processArticle = async (article: Article) => {
   console.log(`\n[+] Processing article: ${article.title}`);
 
-
   const alreadyexistNews = await prisma.miniNews.findFirst({
     where: {
       title: article.title,
@@ -45,6 +44,7 @@ export const processArticle = async (article: Article) => {
       content: article.content,
     }
   });
+
 
   if (alreadyexistNews) {
     console.log(`---Skipping processing of article as it already exists in DB: ${article.title}`);

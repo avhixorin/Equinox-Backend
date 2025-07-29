@@ -13,6 +13,15 @@ export const typedefs = `#news
         score: Float!
         youtube: Boolean
         ytViews: Int
+
+        center: Float!
+        center_left: Float!
+        center_right: Float!
+        far_left: Float!
+        right: Float!
+        confidence: Float!
+        contextsummary: String
+        predictedbias: String
     }
 
     type News {
@@ -20,4 +29,3 @@ export const typedefs = `#news
         id: ID!
     }
 `
-

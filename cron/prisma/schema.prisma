@@ -18,7 +18,7 @@ model MiniNews {
   links        String[]
   content      String?
   pubDate      DateTime
-  sources       String[]
+  sources      String[]
   bias         String[]
   youtube      Boolean    @default(false)
   imageUrl     String?
@@ -30,6 +30,15 @@ model MiniNews {
   timelinedBy  Timeline[]
   ytViews      Int        @default(0)
   twitter      Boolean    @default(false)
+
+  center         Decimal @default(0)
+  center_left    Decimal @default(0)
+  center_right   Decimal @default(0)
+  far_left       Decimal @default(0)
+  right          Decimal @default(0)
+  confidence     Decimal @default(0)
+  contextsummary String?
+  predictedbias  String?
 }
 
 model User {

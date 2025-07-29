@@ -1,6 +1,6 @@
 import { Article, MatchType } from "../constant.js";
 import { PrismaClient } from "@prisma/client";
-import { setLongDescription } from "../util/updateLongDescription.js";
+import { getNewsFullArticleAndSetBias } from "../util/updateLongDescription.js";
 import { TwitterNewsAddedInDB, WebsiteNewsAddedInDB, YoutubeNewsAddedInDB } from "../util/logsForDebugging.js";
 
 const prisma = new PrismaClient();
@@ -26,8 +26,8 @@ const createMiniNews = async (article: Article, category: string, newsId: string
     else if (article.youtube) YoutubeNewsAddedInDB();
     else WebsiteNewsAddedInDB();
 
-    return miniNews.id
-    // await setLongDescription({ id: miniNews.id, link: miniNews.links[0] });
+    await getNewsFullArticleAndSetBias({ id: miniNews.id, link: miniNews.links[0] });
+    return miniNews.id;
 }
 
 const handleUnrelatedArticle = async (article: Article, category: string) => {
@@ -126,7 +126,6 @@ const handleSameEventArticle = async (
     }
 }
 
-
 export const handleArticle = async (article: Article, category: string, matchType: MatchType, relatedId: string) => {
     switch (matchType) {
         case MatchType.UNRELATED:
@@ -142,8 +141,6 @@ export const handleArticle = async (article: Article, category: string, matchTyp
     }
 
 }
-
-
 
 export const getMiniNewsById = async (id: string) => {
     let miniNews = await prisma.miniNews.findUnique({
@@ -164,3 +161,20 @@ export const getMiniNewsById = async (id: string) => {
 
     return miniNews;
 }
+
+const article = {
+    category: "Celebrity",
+    link: "https://timesofindia.indiatimes.com/entertainment/hindi/bollywood/box-office/mohit-suri-ahaan-panday-and-aneet-paddas-saiyaara-becomes-25th-biggest-hit-of-hindi-cinema-records-its-lowest-collection-on-monday/articleshow/122966638.cms",
+    title: "Mohit Suri, Ahaan Panday and Aneet Padda’s ‘Saiyaara’ becomes 25th biggest hit of Hindi cinema; records its lowest collection on Monday",
+    content: "",
+    source: "TOI",
+    pubDate: new Date(),
+    imageUrl: "",
+    youtube: false,
+    views: 0,
+    twitter: false
+}
+
+handleArticle(article, "Celebrity", MatchType.UNRELATED, "").catch(err => {
+    console.error("Error in handleArticle:", err);
+});

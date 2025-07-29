@@ -6,16 +6,16 @@ import { PrismaClient } from "@prisma/client";
 
 const client = new PrismaClient();
 
-const csvWriter = createObjectCsvWriter({
-  path: './newsData.csv',
-  header: [
-    { id: 'title', title: 'Title' },
-    { id: 'content', title: 'Content' }
-  ],
-  alwaysQuote: true,
-});
+// const csvWriter = createObjectCsvWriter({
+//   path: './newsData.csv',
+//   header: [
+//     { id: 'title', title: 'Title' },
+//     { id: 'content', title: 'Content' }
+//   ],
+//   alwaysQuote: true,
+// });
 
-export async function setLongDescription(miniNews: { id: string; link: string }) {
+export async function getNewsFullArticleAndSetBias(miniNews: { id: string; link: string }) {
   try {
     const { data: html } = await axios.get(miniNews.link, {
       headers: {
@@ -43,18 +43,34 @@ export async function setLongDescription(miniNews: { id: string; link: string })
         .replace(/\s{2,}/g, " ")
 
 
-      //get bias from model endpoint using the cleaned text
-      // const bias = await getBias(cleaned);
+      try {
+        const response = await axios.post("https://news-bias-service-696524841053.us-central1.run.app/predict", {
+          content: cleaned
+        }, {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          }
+        })
 
-      await client.miniNews.update({
-        where: { id: miniNews.id },
-        data: {
-          // add to bias array , push to the array not set
-          bias: {
-            push: "left",
-          },
-        }
-      });
+        await client.miniNews.update({
+          where: { id: miniNews.id },
+          data: {
+            center: response.data.center,
+            center_left: response.data.center_left,
+            center_right: response.data.center_right,
+            far_left: response.data.far_left,
+            right: response.data.right,
+            confidence: response.data.confidence,
+            contextsummary: response.data.context_summary,
+            predictedbias: response.data.predicted_bias
+          }
+        });
+
+        console.log("Bias updated successfully for article:", miniNews.id);
+      } catch (error) {
+        console.error("Error occurred while fetching bias:", error);
+      }
 
       // await csvWriter.writeRecords([records]);
       // console.log(`CSV file created with ${records.title} records.`);

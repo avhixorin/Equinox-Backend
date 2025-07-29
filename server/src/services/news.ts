@@ -35,18 +35,37 @@ export class NewsService {
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-        SELECT id, title, content, score, category, "newsId", "pubDate", links, sources, "imageUrl"
-        FROM "MiniNews"
-        WHERE search_vector @@ plainto_tsquery('english', $1)
-        AND youtube = false
-        AND twitter = false
-        ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
-        LIMIT $2 OFFSET $3;
-        `,
+  SELECT
+    id,
+    title,
+    content,
+    score,
+    category,
+    "newsId",
+    "pubDate",
+    links,
+    sources,
+    "imageUrl",
+    center,
+    center_left,
+    center_right,
+    far_left,
+    "right",
+    confidence,
+    "contextSummary",
+    "predictedBias"
+  FROM "MiniNews"
+  WHERE search_vector @@ plainto_tsquery('english', $1)
+    AND youtube = false
+    AND twitter = false
+  ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
+  LIMIT $2 OFFSET $3;
+  `,
                 query,
                 limit,
                 offset
             );
+
         }
 
         if (!initialNews) throw new Error("error in fetching news!")
@@ -149,20 +168,40 @@ export class NewsService {
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-        SELECT id, title, content, score, youtube, category, "newsId", "pubDate", links, sources, "imageUrl"
-        FROM "MiniNews"
-        WHERE category = $2
-          AND youtube = false
-          AND twitter = false
-          AND search_vector @@ plainto_tsquery('english', $1)
-        ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
-        LIMIT $3 OFFSET $4;
-        `,
+                SELECT
+                    id,
+                    title,
+                    content,
+                    score,
+                    youtube,
+                    category,
+                    "newsId",
+                    "pubDate",
+                    links,
+                    sources,
+                    "imageUrl",
+                    center,
+                    center_left,
+                    center_right,
+                    far_left,
+                    "right",
+                    confidence,
+                    "contextSummary",
+                    "predictedBias"
+                FROM "MiniNews"
+                WHERE category = $2
+                    AND youtube = false
+                    AND twitter = false
+                    AND search_vector @@ plainto_tsquery('english', $1)
+                ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
+                LIMIT $3 OFFSET $4;
+                `,
                 query,
                 category,
                 limit,
                 offset
             );
+
         }
 
         if (!initialNews) throw new Error("error in fetching news!")
@@ -243,20 +282,40 @@ export class NewsService {
         else {
             initialNews = await prismaClient.$queryRawUnsafe(
                 `
-            SELECT id, title, content, score, youtube, category, "newsId", "pubDate", links, sources, "imageUrl"
-            FROM "MiniNews"
-            WHERE "newsId" = $2
-            AND youtube = false
-            AND twitter = false
-            AND search_vector @@ plainto_tsquery('english', $1)
-            ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
-            LIMIT $3 OFFSET $4;
-            `,
+                SELECT
+                    id,
+                    title,
+                    content,
+                    score,
+                    youtube,
+                    category,
+                    "newsId",
+                    "pubDate",
+                    links,
+                    sources,
+                    "imageUrl",
+                    center,
+                    center_left,
+                    center_right,
+                    far_left,
+                    "right",
+                    confidence,
+                    "contextSummary",
+                    "predictedBias"
+                FROM "MiniNews"
+                WHERE "newsId" = $2
+                    AND youtube = false
+                    AND twitter = false
+                    AND search_vector @@ plainto_tsquery('english', $1)
+                ORDER BY ts_rank(search_vector, plainto_tsquery('english', $1)) DESC
+                LIMIT $3 OFFSET $4;
+                `,
                 query,
                 parentNewsId,
                 limit,
                 offset
             );
+
         }
 
         if (!initialNews) throw new Error("error in fetching news!")

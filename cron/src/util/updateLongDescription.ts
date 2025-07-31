@@ -56,9 +56,9 @@ export async function getNewsFullArticleAndSetBias(miniNews: { id: string; link:
         await client.miniNews.update({
           where: { id: miniNews.id },
           data: {
-            center: response.data.all_scores.center,
-            center_left: response.data.all_scores.center_left,
-            center_right: response.data.all_scores.center_right,
+            center: response.data.all_scores.centre,
+            center_left: response.data.all_scores.centre_left,
+            center_right: response.data.all_scores.centre_right,
             far_left: response.data.all_scores.far_left,
             right: response.data.all_scores.right,
             confidence: response.data.confidence,

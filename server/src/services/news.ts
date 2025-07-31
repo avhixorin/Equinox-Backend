@@ -52,8 +52,8 @@ export class NewsService {
     far_left,
     "right",
     confidence,
-    "contextSummary",
-    "predictedBias"
+    "contextsummary",
+    "predictedbias"
   FROM "MiniNews"
   WHERE search_vector @@ plainto_tsquery('english', $1)
     AND youtube = false
@@ -186,8 +186,8 @@ export class NewsService {
                     far_left,
                     "right",
                     confidence,
-                    "contextSummary",
-                    "predictedBias"
+                    "contextsummary",
+                    "predictedbias"
                 FROM "MiniNews"
                 WHERE category = $2
                     AND youtube = false
@@ -300,8 +300,8 @@ export class NewsService {
                     far_left,
                     "right",
                     confidence,
-                    "contextSummary",
-                    "predictedBias"
+                    "contextsummary",
+                    "predictedbias"
                 FROM "MiniNews"
                 WHERE "newsId" = $2
                     AND youtube = false

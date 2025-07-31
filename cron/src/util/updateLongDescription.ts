@@ -56,15 +56,15 @@ export async function getNewsFullArticleAndSetBias(miniNews: { id: string; link:
         await client.miniNews.update({
           where: { id: miniNews.id },
           data: {
-            center: response.data.center,
-            center_left: response.data.center_left,
-            center_right: response.data.center_right,
-            far_left: response.data.far_left,
-            right: response.data.right,
+            center: response.data.all_scores.center,
+            center_left: response.data.all_scores.center_left,
+            center_right: response.data.all_scores.center_right,
+            far_left: response.data.all_scores.far_left,
+            right: response.data.all_scores.right,
             confidence: response.data.confidence,
             contextsummary: response.data.context_summary,
             predictedbias: response.data.predicted_bias
-          }
+          }
         });
 
         console.log("Bias updated successfully for article:", miniNews.id);

@@ -42,10 +42,16 @@ export async function getNewsFullArticleAndSetBias(miniNews: { id: string; link:
         .replace(/(First Published|Last Updated):.+?\n/gi, "")
         .replace(/\s{2,}/g, " ")
 
+      const maxSafeTokenLimit = 1024;
+      const avgCharsPerToken = 2;
+      const safeCharLimit = maxSafeTokenLimit * avgCharsPerToken; 
+
+      const truncatedContent = cleaned.slice(0, safeCharLimit);
+
 
       try {
         const response = await axios.post("https://news-bias-service-696524841053.us-central1.run.app/predict", {
-          content: cleaned
+          content: truncatedContent
         }, {
           headers: {
             "Content-Type": "application/json",

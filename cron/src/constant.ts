@@ -176,6 +176,15 @@ export const categoryNames = [
     "Startup"
 ];
 
+export const bias = [
+    "center",
+    "center_left",
+    "center_right",
+    "far_left",
+    "right",
+    "predictedbias"
+]
+
 
 console.log("website rss feeds:", websiteRssFeeds.length);
 console.log("youtube channels:", ytChannels.length);

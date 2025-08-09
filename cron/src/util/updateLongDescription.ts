@@ -3,6 +3,8 @@ import { createObjectCsvWriter } from "csv-writer"
 import axios from "axios";
 import { JSDOM } from "jsdom";
 import { PrismaClient } from "@prisma/client";
+import { getBias } from "./getBias.js";
+import { raw } from "@prisma/client/runtime/library";
 
 const client = new PrismaClient();
 
@@ -37,46 +39,58 @@ export async function getNewsFullArticleAndSetBias(miniNews: { id: string; link:
 
     if (article?.textContent) {
 
-     const cleaned = article.textContent
+      const cleaned = article.textContent
         .replace(/(?:twitter\.com|facebook\.com|instagram\.com)[^\s]+/gi, "")
         .replace(/(First Published|Last Updated):.+?\n/gi, "")
         .replace(/\s{2,}/g, " ")
 
-      const maxSafeTokenLimit = 1024;
-      const avgCharsPerToken = 2;
-      const safeCharLimit = maxSafeTokenLimit * avgCharsPerToken; 
+      const biasResult = await getBias(cleaned);
+      console.log("biasResult:", biasResult)
 
-      const truncatedContent = cleaned.slice(0, safeCharLimit);
+      await client.miniNews.update({
+        where: { id: miniNews.id },
+        data: {
+          center: biasResult.center,
+          center_left: biasResult.center_left,
+          center_right: biasResult.center_right,
+          far_left: biasResult.far_left,
+          right: biasResult.right,
+        }
+      });
+
+      // const maxSafeTokenLimit = 1024;
+      // const avgCharsPerToken = 2;
+      // const safeCharLimit = maxSafeTokenLimit * avgCharsPerToken;
+
+      // const truncatedContent = cleaned.slice(0, safeCharLimit);
 
 
-      try {
-        const response = await axios.post("https://news-bias-service-696524841053.us-central1.run.app/predict", {
-          content: truncatedContent
-        }, {
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          }
-        })
+      //       try {
+      //         const response = await axios.post("https://news-bias-service-696524841053.us-central1.run.app/predict", {
+      //           content: truncatedContent
+      //         }, {
+      //           headers: {
+      //             "Content-Type": "application/json",
+      //             "Accept": "application/json"
+      //           }
+      //         })
 
-        await client.miniNews.update({
-          where: { id: miniNews.id },
-          data: {
-            center: response.data.all_scores.centre,
-            center_left: response.data.all_scores.centre_left,
-            center_right: response.data.all_scores.centre_right,
-            far_left: response.data.all_scores.far_left,
-            right: response.data.all_scores.right,
-            confidence: response.data.confidence,
-            contextsummary: response.data.context_summary,
-            predictedbias: response.data.predicted_bias
-          }
-        });
+      // //         await client.miniNews.update({
+      // //           where: { id: miniNews.id },
+      // //           data: {
+      // //             center: response.data.all_scores.centre,
+      // //             center_left: response.data.all_scores.centre_left,
+      // //             center_right: response.data.all_scores.centre_right,
+      // //             far_left: response.data.all_scores.far_left,
+      // //             right: response.data.all_scores.right,
 
-        console.log("Bias updated successfully for article:", miniNews.id);
-      } catch (error) {
-        console.error("Error occurred while fetching bias:", error);
-      }
+      // //           }
+      // //         });
+
+      //         console.log("Bias updated successfully for article:", miniNews.id);
+      //       } catch (error) {
+      //         console.error("Error occurred while fetching bias:", error);
+      //       }
 
       // await csvWriter.writeRecords([records]);
       // console.log(`CSV file created with ${records.title} records.`);
@@ -88,3 +102,6 @@ export async function getNewsFullArticleAndSetBias(miniNews: { id: string; link:
     console.warn(`Failed to extract ${miniNews.link}: ${err.message}`);
   }
 }
+
+
+// getNewsFullArticleAndSetBias({ id: "kkj9", link: "https://www.thehindu.com/news/national/india-welcomes-meeting-between-us-and-russia-in-alaska-on-august-15/article69914098.ece" })

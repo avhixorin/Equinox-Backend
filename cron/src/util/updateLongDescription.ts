@@ -1,10 +1,8 @@
 import { Readability } from "@mozilla/readability";
-import { createObjectCsvWriter } from "csv-writer"
 import axios from "axios";
 import { JSDOM } from "jsdom";
 import { PrismaClient } from "@prisma/client";
 import { getBias } from "./getBias.js";
-import { raw } from "@prisma/client/runtime/library";
 
 const client = new PrismaClient();
 
@@ -44,7 +42,7 @@ export async function getNewsFullArticleAndSetBias(miniNews: { id: string; link:
         .replace(/(First Published|Last Updated):.+?\n/gi, "")
         .replace(/\s{2,}/g, " ")
 
-      const biasResult = await getBias(cleaned);
+      const biasResult = await getBias(cleaned.slice(0, 1000));
       console.log("biasResult:", biasResult)
 
       await client.miniNews.update({
@@ -102,6 +100,24 @@ export async function getNewsFullArticleAndSetBias(miniNews: { id: string; link:
     console.warn(`Failed to extract ${miniNews.link}: ${err.message}`);
   }
 }
+
+// export const updateBiasInAllExistingNews = async () => {
+//   const allNews = await client.miniNews.findMany({});
+//   let flag = false;
+//   for (const news of allNews) {
+//     if(news.links[0] === "https://www.ndtv.com/mumbai-news/734-transactions-21-months-4-women-mumbai-man-loses-rs-9-crore-to-cyber-fraud-9044564#publisher=newsstand"){
+//       flag = true;
+//     }
+//     if(!flag){
+//       console.log("Skipping bias update for news: ", news.title);
+//       continue;
+//     }
+//     await getNewsFullArticleAndSetBias({ id: news.id, link: news.links[0] });
+//     console.log("bias added for news: ", news.title);
+//   }
+// }
+
+// updateBiasInAllExistingNews()
 
 
 // getNewsFullArticleAndSetBias({ id: "kkj9", link: "https://www.thehindu.com/news/national/india-welcomes-meeting-between-us-and-russia-in-alaska-on-august-15/article69914098.ece" })

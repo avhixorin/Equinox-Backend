@@ -103,13 +103,10 @@ export async function getNewsFullArticleAndSetBias(miniNews: { id: string; link:
 
 // export const updateBiasInAllExistingNews = async () => {
 //   const allNews = await client.miniNews.findMany({});
-//   let flag = false;
+
 //   for (const news of allNews) {
-//     if(news.links[0] === "https://www.ndtv.com/mumbai-news/734-transactions-21-months-4-women-mumbai-man-loses-rs-9-crore-to-cyber-fraud-9044564#publisher=newsstand"){
-//       flag = true;
-//     }
-//     if(!flag){
-//       console.log("Skipping bias update for news: ", news.title);
+//     if (news.center.toNumber() !== 0.0) {
+//       console.log("bias already exists for news: ", news.title);
 //       continue;
 //     }
 //     await getNewsFullArticleAndSetBias({ id: news.id, link: news.links[0] });
@@ -119,5 +116,20 @@ export async function getNewsFullArticleAndSetBias(miniNews: { id: string; link:
 
 // updateBiasInAllExistingNews()
 
+
+// const updateSpecificNews = async (link: string) => {
+//   const news = await client.miniNews.findFirst({
+//     where: { links: { has: link } }
+//   });
+
+//   if (!news) {
+//     console.warn(`No news found with link: ${link}`);
+//     return;
+//   }
+
+//   await getNewsFullArticleAndSetBias({ id: news.id, link: news.links[0] });
+// }
+
+// updateSpecificNews("https://www.ndtv.com/world-news/what-trumps-new-tariffs-could-mean-for-us-consumers-9044502#publisher=newsstand")
 
 // getNewsFullArticleAndSetBias({ id: "kkj9", link: "https://www.thehindu.com/news/national/india-welcomes-meeting-between-us-and-russia-in-alaska-on-august-15/article69914098.ece" })
